@@ -1,0 +1,55 @@
+# VIIRS Net Primary Productivity Cloud Run Workflow
+
+This chapter documents a cloud-based workflow for generating VIIRS net primary productivity products.
+
+## Purpose
+
+This workflow computes daily and monthly satellite-derived primary productivity products from VIIRS inputs using a containerized Cloud Run Job pattern.
+
+## Repository structure
+```text
+.
+├── CHANGELOG.md
+├── config
+│   ├── config.yml
+│   └── requirements.txt
+├── deploy_job.sh
+├── Dockerfile
+├── entrypoint.sh
+├── LICENSE
+├── README.md
+├── scripts
+│   ├── control_viirs_netpp_monthly.py
+│   ├── control_viirs_netpp.py
+│   ├── make_viirs_netpp_monthly.py
+│   └── make_viirs_netpp.py
+├── src
+│   └── __init__.py
+└── templates
+    ├── nasa_noaa20_4km_month.cdl
+    ├── nasa_noaa20_4km.cdl
+    ├── nasa_snpp_4km_month.cdl
+    └── nasa_snpp_4km.cdl
+```
+   
+    ## Source files
+
+- [Dockerfile](workflows/viirs-netpp/Dockerfile)
+- [entrypoint.sh](workflows/viirs-netpp/entrypoint.sh)
+- [deploy_job.sh](workflows/viirs-netpp/deploy_job.sh)
+- [config.yml](workflows/viirs-netpp/config/config.yml)
+- [requirements.txt](workflows/viirs-netpp/config/requirements.txt)
+
+### Scripts
+
+- [control_viirs_netpp.py](workflows/viirs-netpp/scripts/control_viirs_netpp.py)
+- [make_viirs_netpp.py](workflows/viirs-netpp/scripts/make_viirs_netpp.py)
+- [control_viirs_netpp_monthly.py](workflows/viirs-netpp/scripts/control_viirs_netpp_monthly.py)
+- [make_viirs_netpp_monthly.py](workflows/viirs-netpp/scripts/make_viirs_netpp_monthly.py)
+
+### Templates
+
+- [nasa_noaa20_4km.cdl](workflows/viirs-netpp/templates/nasa_noaa20_4km.cdl)
+- [nasa_noaa20_4km_month.cdl](workflows/viirs-netpp/templates/nasa_noaa20_4km_month.cdl)
+- [nasa_snpp_4km.cdl](workflows/viirs-netpp/templates/nasa_snpp_4km.cdl)
+- [nasa_snpp_4km_month.cdl](workflows/viirs-netpp/templates/nasa_snpp_4km_month.cdl)

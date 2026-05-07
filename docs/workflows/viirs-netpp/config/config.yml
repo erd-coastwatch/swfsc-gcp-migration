@@ -1,0 +1,205 @@
+# =============================================================================
+# config.yml  —  GCP deployment config for VIIRS NRT + SQ primary productivity
+#
+# Sensors covered:
+#   noaa20  — VIIRS NOAA-20  (JPSS-1),  operational 2018-01-01 onward
+#   noaa21  — VIIRS NOAA-21  (JPSS-2),  operational 2023-02-10 onward
+#   snpp    — VIIRS Suomi-NPP,           operational 2012-01-02 onward
+#
+# Data types covered:
+#   nrt — Near Real Time  (NASA sensor_id varies by sensor, dtid = NRT stream)
+#   sq  — Science Quality (NASA sensor_id varies by sensor, dtid = SQ stream)
+#
+# Machine-specific secrets and paths come from environment variables.
+# Everything else lives here.
+#
+# Required environment variables:
+#   NPP_LOCAL_SCRATCH   local temp dir on the VM  (default: /tmp/npp_scratch)
+#   NPP_NCO_DIR         path to dir containing ncgen / nccopy binaries
+#   NPP_PYTHON          path to python binary
+# =============================================================================
+
+---
+# ---------------------------------------------------------------------------
+# GCS buckets
+#
+# erddap_bucket — final productivity NetCDF products only
+#   NRT:  gs://YOUR_GCS_BUCKET/edge/{sensor}_netpp/{interval}/{year}/1day_nrt/<file>.nc
+#   SQ:   gs://YOUR_GCS_BUCKET/edge/{sensor}_netpp/{interval}/{year}/1day/<file>.nc
+#
+# Input files (chl/par/sst) are NOT archived — they are downloaded, used,
+# and removed from local scratch without being uploaded to GCS.
+# ---------------------------------------------------------------------------
+gcs:
+  erddap_bucket: "YOUR_GCS_BUCKET"
+  # {sensor}  → noaa20 | noaa21 | snpp
+  # {dtype}   → nrt | sq
+  # {year}    → YYYY
+  erddap_prefix: "edge/{sensor}_netpp/{interval}/{year}"
+
+---
+# ---------------------------------------------------------------------------
+# NASA OceanColor file search API
+#
+# sensor_id values (NASA OceanColor):
+#   14  → VIIRS SNPP
+#   33  → VIIRS NOAA-20 (JPSS-1)
+#   43  → VIIRS NOAA-21 (JPSS-2)
+#
+# dtid selects Level-3 Mapped streams and is sensor-specific:
+#
+#   SNPP:
+#     NRT chl/par: 1019   SQ chl/par: 1007
+#     NRT sst:     1025   SQ sst:     1013
+#
+#   NOAA-20:
+#     NRT chl/par: 1209   SQ chl/par: 1197
+#     NRT sst:     1215   SQ sst:     1203
+#
+#   NOAA-21:
+#     NRT chl/par: 1580   SQ chl/par: 1568
+#     NRT sst:     1613   SQ sst:     1601
+# ---------------------------------------------------------------------------
+nasa_api:
+  url:           "https://oceandata.sci.gsfc.nasa.gov/api/file_search"
+  resolution_id: "4km"
+  period:        "DAY"
+
+  # Per-sensor NASA IDs
+  sensor_ids:
+    snpp:   14
+    noaa20: 33
+    noaa21: 43
+
+  # Per-dtype, per-sensor variable configs
+  variables:
+    nrt:
+      snpp:
+        chl:
+          dtid:      "1019"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1019"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1025"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.NRT.nc"
+
+      noaa20:
+        chl:
+          dtid:      "1209"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1209"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1215"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.NRT.nc"
+
+      noaa21:
+        chl:
+          dtid:      "1580"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1580"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1613"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.NRT.nc"
+
+    sq:
+      snpp:
+        chl:
+          dtid:      "1007"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1007"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1013"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.nc"
+
+      noaa20:
+        chl:
+          dtid:      "1197"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1197"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1203"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.nc"
+
+      noaa21:
+        chl:
+          dtid:      "1568"
+          prod_id:   "chlor_a"
+          nc_filter: ".nc"
+        par:
+          dtid:      "1568"
+          prod_id:   "par"
+          nc_filter: ".nc"
+        sst:
+          dtid:      "1601"
+          prod_id:   "sst"
+          nc_filter: ".SST.sst.4km.nc"
+
+---
+# ---------------------------------------------------------------------------
+# Processing
+# ---------------------------------------------------------------------------
+processing:
+  cdl_file: "nasa_{sensor}_4km.cdl"
+  cdl_file_monthly: "nasa_{sensor}_4km_month.cdl"
+  temp_nc: "temp_{sensor}_{dtype}.nc"
+
+  output_filename_template:
+    nrt: "productivity_viirs_{sensor}_daily_nrt_{date}.nc"
+    sq:  "productivity_viirs_{sensor}_daily_{date}.nc"
+
+  interval: "1day"
+
+  output_filename_template_monthly:
+    nrt: "productivity_viirs_{sensor}_monthly_nrt_{yearmonth}.nc"
+    sq:  "productivity_viirs_{sensor}_monthly_sq_{yearmonth}.nc"
+
+  monthly_chunk_rows: 256
+
+  nccopy_compression: 6
+  sst_mask_below: -2
+  sst_clip_min: -1
+  sst_clip_max: 29
+
+---
+# ---------------------------------------------------------------------------
+# Sensor metadata
+# Operational start dates define the valid processing window for each sensor.
+# ---------------------------------------------------------------------------
+sensors:
+  snpp:
+    enabled: true
+    start_year: "2012"
+    start_date: "2012-01-02"       # first full day of science data
+  noaa20:
+    enabled: true
+    start_year: "2018"
+    start_date: "2018-01-01"
+  noaa21:
+    enabled: false
+    start_year: "2023"
+    start_date: "2023-02-10"

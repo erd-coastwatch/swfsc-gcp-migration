@@ -1,0 +1,32 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "CoastWatch West Coast node / SWFSC ERDDAP migration",
+    "section": "",
+    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "viirs-netpp.html",
+    "href": "viirs-netpp.html",
+    "title": "1  VIIRS Net Primary Productivity Cloud Run Workflow",
+    "section": "",
+    "text": "1.1 Purpose\nThis chapter documents a cloud-based workflow for generating VIIRS net primary productivity products.\nThis workflow computes daily and monthly satellite-derived primary productivity products from VIIRS inputs using a containerized Cloud Run Job pattern.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>VIIRS Net Primary Productivity Cloud Run Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "viirs-netpp.html#repository-structure",
+    "href": "viirs-netpp.html#repository-structure",
+    "title": "1  VIIRS Net Primary Productivity Cloud Run Workflow",
+    "section": "1.2 Repository structure",
+    "text": "1.2 Repository structure\n.\n├── CHANGELOG.md\n├── config\n│   ├── config.yml\n│   └── requirements.txt\n├── deploy_job.sh\n├── Dockerfile\n├── entrypoint.sh\n├── LICENSE\n├── README.md\n├── scripts\n│   ├── control_viirs_netpp_monthly.py\n│   ├── control_viirs_netpp.py\n│   ├── make_viirs_netpp_monthly.py\n│   └── make_viirs_netpp.py\n├── src\n│   └── __init__.py\n└── templates\n    ├── nasa_noaa20_4km_month.cdl\n    ├── nasa_noaa20_4km.cdl\n    ├── nasa_snpp_4km_month.cdl\n    └── nasa_snpp_4km.cdl\n## Source files\n\nDockerfile\nentrypoint.sh\ndeploy_job.sh\nconfig.yml\nrequirements.txt\n\n\n1.2.1 Scripts\n\ncontrol_viirs_netpp.py\nmake_viirs_netpp.py\ncontrol_viirs_netpp_monthly.py\nmake_viirs_netpp_monthly.py\n\n\n\n1.2.2 Templates\n\nnasa_noaa20_4km.cdl\nnasa_noaa20_4km_month.cdl\nnasa_snpp_4km.cdl\nnasa_snpp_4km_month.cdl",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>VIIRS Net Primary Productivity Cloud Run Workflow</span>"
+    ]
+  }
+]
