@@ -175,5 +175,8 @@
   },
   "code-pages/charm/viirs_L3.qmd": {
     "viirs_L3.html": "7fdbe5ff"
+  },
+  "erddap-cloud-migration-presentations.qmd": {
+    "erddap-cloud-migration-presentations.html": "0136f3e4"
   }
 }
