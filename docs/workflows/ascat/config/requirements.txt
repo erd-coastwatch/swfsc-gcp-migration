@@ -1,0 +1,7 @@
+typer
+netCDF4
+pyyaml
+requests
+beautifulsoup4
+numpy
+google-cloud-storage

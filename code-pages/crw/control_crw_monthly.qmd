@@ -1,0 +1,18 @@
+---
+title: "control_crw_monthly.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Monthly CRW controller; identifies missing monthly SST/SSTA outputs and runs the monthly worker.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/crw/scripts/control_crw_monthly.py >}}
+```
+
+:::

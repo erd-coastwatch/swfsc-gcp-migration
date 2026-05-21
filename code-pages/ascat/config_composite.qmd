@@ -1,0 +1,18 @@
+---
+title: "config_composite.yaml"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+Runtime configuration for ASCAT-C multi-day and monthly composites.
+
+::: {.code-shell}
+
+```{.yaml}
+{{< include ../../workflows/ascat/config/config_composite.yaml >}}
+```
+
+:::

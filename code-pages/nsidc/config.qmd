@@ -1,0 +1,18 @@
+---
+title: "config.yaml"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../nsidc.html)
+
+Runtime configuration for NSIDC daily and monthly processing.
+
+::: {.code-shell}
+
+```{.yaml}
+{{< include ../../workflows/nsidc/config/config.yaml >}}
+```
+
+:::

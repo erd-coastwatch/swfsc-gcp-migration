@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------
+# ASCAT-C 4-Hour Ingestion Configuration
+# -----------------------------------------------------------------------------
+
+# Base directory for all ASCAT processing
+base_dir: /tmp
+
+# -----------------------------------------------------------------------------
+# Local directory structure (relative to base_dir)
+# -----------------------------------------------------------------------------
+paths:
+  data: data
+  logs: logs
+  templates: /app/templates   # read from image at build time; /tmp is write-only scratch
+
+# -----------------------------------------------------------------------------
+# Remote data source
+# -----------------------------------------------------------------------------
+source:
+  # Base URL for ASCAT-C NetCDF products
+  base_url: https://coastwatch.noaa.gov/pub/socd7/coastwatch/metop/ascat/netcdf
+
+# -----------------------------------------------------------------------------
+# ERDDAP / SCP upload configuration
+# -----------------------------------------------------------------------------
+gcs:
+  work_bucket: YOUR_WORK_BUCKET
+  prod_bucket: YOUR_PRODUCTION_BUCKET
+
+prefixes:
+  archive_4hr: edge/ASCAT/4hr
+  publish_4hr: edge/ASCAT/4hr

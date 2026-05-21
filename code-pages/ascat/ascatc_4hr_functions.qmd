@@ -1,0 +1,18 @@
+---
+title: "ascatc_4hr_functions.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+Shared functions for ASCAT-C 4-hour ingestion and derived wind products.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/ascat/src/ascatc_4hr_functions.py >}}
+```
+
+:::

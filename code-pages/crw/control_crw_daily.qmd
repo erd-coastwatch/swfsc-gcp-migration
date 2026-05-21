@@ -1,0 +1,18 @@
+---
+title: "control_crw_daily.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Daily CRW controller; identifies missing daily SST/SSTA outputs and runs the daily worker.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/crw/scripts/control_crw_daily.py >}}
+```
+
+:::

@@ -1,0 +1,23 @@
+base_dir: /tmp
+
+paths:
+  data: data
+  logs: logs
+  templates: /app/templates   # read from image at build time; /tmp is write-only scratch
+
+composite_days:
+  - 1
+  - 3
+  - 7
+
+gcs:
+  work_bucket: YOUR_WORK_BUCKET
+  prod_bucket: YOUR_PRODUCTION_BUCKET
+
+prefixes:
+  publish_1day: edge/ASCAT/1day
+  publish_3day: edge/ASCAT/3day
+  publish_7day: edge/ASCAT/7day
+  publish_mday: edge/ASCAT/mday
+
+nccopy_level: 6

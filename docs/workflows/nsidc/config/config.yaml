@@ -1,0 +1,25 @@
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(message)s"
+
+source:
+  base_url: "https://noaadata.apps.nsidc.org/NOAA/G02202_V6"
+  poles:
+    - "north"
+    - "south"
+
+gcs:
+  bucket: "YOUR_PRODUCTION_BUCKET"
+  prefix: "satellite/nsidc_g02202_v6/"   # blobs: <prefix><pole>/daily/<year>/<fname>
+                                          #        <prefix><pole>/monthly/<fname>
+
+work:
+  dir: "/tmp/work"
+  keep_local_results: false
+
+compression:
+  level: 4     # nccopy -d level
+
+# Default lookback window for daily mode when START_DATE/END_DATE are not set
+processing:
+  lookback_days: 14   # extra buffer — NSIDC can lag 2-3 days

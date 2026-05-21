@@ -400,6 +400,251 @@ pages = [
      "text",
      "CDL template for VIIRS L3 NetCDF formatting.",
      "workflows/charm/templates/viirs_L3.cdl"),
+
+         # =========================================================
+    # CRW SST / SSTA
+    # =========================================================
+
+    ("code-pages/crw/dockerfile.qmd",
+     "Dockerfile",
+     "dockerfile",
+     "Container environment for the CRW SST/SSTA workflow.",
+     "workflows/crw/Dockerfile"),
+
+    ("code-pages/crw/entrypoint.qmd",
+     "entrypoint.sh",
+     "bash",
+     "Cloud Run entrypoint; dispatches daily or monthly CRW processing.",
+     "workflows/crw/entrypoint.sh"),
+
+    ("code-pages/crw/deploy_job.qmd",
+     "deploy_job.sh",
+     "bash",
+     "Builds, deploys, and schedules the CRW Cloud Run jobs.",
+     "workflows/crw/deploy_job.sh"),
+
+    ("code-pages/crw/requirements.qmd",
+     "requirements.txt",
+     "text",
+     "Python dependencies for the CRW container.",
+     "workflows/crw/config/requirements.txt"),
+
+    ("code-pages/crw/control_crw_daily.qmd",
+     "control_crw_daily.py",
+     "python",
+     "Daily CRW controller; identifies missing daily SST/SSTA outputs and runs the daily worker.",
+     "workflows/crw/scripts/control_crw_daily.py"),
+
+    ("code-pages/crw/control_crw_monthly.qmd",
+     "control_crw_monthly.py",
+     "python",
+     "Monthly CRW controller; identifies missing monthly SST/SSTA outputs and runs the monthly worker.",
+     "workflows/crw/scripts/control_crw_monthly.py"),
+
+    ("code-pages/crw/update_sst_ssta_daily.qmd",
+     "update_sst_ssta_daily.py",
+     "python",
+     "Builds one daily combined CRW SST/SSTA NetCDF product.",
+     "workflows/crw/scripts/update_sst_ssta_daily.py"),
+
+    ("code-pages/crw/update_sst_ssta_monthly.qmd",
+     "update_sst_ssta_monthly.py",
+     "python",
+     "Builds one monthly combined CRW SST/SSTA NetCDF product.",
+     "workflows/crw/scripts/update_sst_ssta_monthly.py"),
+
+    # =========================================================
+    # ASCAT-C WIND
+    # =========================================================
+
+    ("code-pages/ascat/dockerfile.qmd",
+     "Dockerfile",
+     "dockerfile",
+     "Container environment for the ASCAT-C wind workflow.",
+     "workflows/ascat/Dockerfile"),
+
+    ("code-pages/ascat/entrypoint.qmd",
+     "entrypoint.sh",
+     "bash",
+     "Cloud Run entrypoint; dispatches daily or monthly ASCAT processing.",
+     "workflows/ascat/entrypoint.sh"),
+
+    ("code-pages/ascat/deploy_job.qmd",
+     "deploy_job.sh",
+     "bash",
+     "Builds, deploys, and schedules the ASCAT Cloud Run jobs.",
+     "workflows/ascat/deploy_job.sh"),
+
+    ("code-pages/ascat/config_update.qmd",
+     "config_update.yaml",
+     "yaml",
+     "Runtime configuration for 4-hour ASCAT-C ingestion and product generation.",
+     "workflows/ascat/config/config_update.yaml"),
+
+    ("code-pages/ascat/config_composite.qmd",
+     "config_composite.yaml",
+     "yaml",
+     "Runtime configuration for ASCAT-C multi-day and monthly composites.",
+     "workflows/ascat/config/config_composite.yaml"),
+
+    ("code-pages/ascat/requirements.qmd",
+     "requirements.txt",
+     "text",
+     "Python dependencies for the ASCAT container.",
+     "workflows/ascat/config/requirements.txt"),
+
+    ("code-pages/ascat/download_ascat_4hr.qmd",
+     "download_ascat_4hr.py",
+     "python",
+     "Downloads ASCAT-C 4-hour wind files and generates value-added CoastWatch products.",
+     "workflows/ascat/scripts/download_ascat_4hr.py"),
+
+    ("code-pages/ascat/ascat_composite_control.qmd",
+     "ascat_composite_control.py",
+     "python",
+     "Controller for daily multi-day and monthly ASCAT composite jobs.",
+     "workflows/ascat/scripts/ascat_composite_control.py"),
+
+    ("code-pages/ascat/make_ascat_multiday.qmd",
+     "make_ascat_multiday.py",
+     "python",
+     "Builds 1-day, 3-day, 7-day, and monthly ASCAT-C wind composites.",
+     "workflows/ascat/scripts/make_ascat_multiday.py"),
+
+    ("code-pages/ascat/ascatc_4hr_functions.qmd",
+     "ascatc_4hr_functions.py",
+     "python",
+     "Shared functions for ASCAT-C 4-hour ingestion and derived wind products.",
+     "workflows/ascat/src/ascatc_4hr_functions.py"),
+
+    ("code-pages/ascat/ascatc_multiday_functions.qmd",
+     "ascatc_multiday_functions.py",
+     "python",
+     "Shared functions for ASCAT-C multi-day and monthly composite generation.",
+     "workflows/ascat/src/ascatc_multiday_functions.py"),
+
+    ("code-pages/ascat/ascat_c_cdl.qmd",
+     "ascat_c.cdl",
+     "text",
+     "CDL template for ASCAT-C CoastWatch-compatible NetCDF outputs.",
+     "workflows/ascat/templates/ascat_c.cdl"),
+
+    ("code-pages/ascat/example_cdl.qmd",
+     "example.cdl",
+     "text",
+     "Example CDL template retained with the ASCAT workflow.",
+     "workflows/ascat/templates/example.cdl"),
+
+    # =========================================================
+    # MODIS-AQUA MH1 PRIMARY PRODUCTIVITY
+    # =========================================================
+
+    ("code-pages/mh1-primprod/dockerfile.qmd",
+     "Dockerfile",
+     "dockerfile",
+     "Container environment for the MODIS-Aqua MH1 primary productivity workflow.",
+     "workflows/mh1-primprod/Dockerfile"),
+
+    ("code-pages/mh1-primprod/entrypoint.qmd",
+     "entrypoint.sh",
+     "bash",
+     "Cloud Run entrypoint for the MH1 primary productivity workflow.",
+     "workflows/mh1-primprod/entrypoint.sh"),
+
+    ("code-pages/mh1-primprod/deploy_job.qmd",
+     "deploy_job.sh",
+     "bash",
+     "Builds, deploys, and schedules the MH1 primary productivity Cloud Run job.",
+     "workflows/mh1-primprod/deploy_job.sh"),
+
+    ("code-pages/mh1-primprod/config.qmd",
+     "config.yml",
+     "yaml",
+     "Runtime configuration for MODIS-Aqua primary productivity processing.",
+     "workflows/mh1-primprod/config/config.yml"),
+
+    ("code-pages/mh1-primprod/requirements.qmd",
+     "requirements.txt",
+     "text",
+     "Python dependencies for the MH1 primary productivity container.",
+     "workflows/mh1-primprod/config/requirements.txt"),
+
+    ("code-pages/mh1-primprod/control_mh1_primprod.qmd",
+     "control_mh1_primprod.py",
+     "python",
+     "Controller for daily and backfill MODIS-Aqua MH1 primary productivity runs.",
+     "workflows/mh1-primprod/scripts/control_mh1_primprod.py"),
+
+    ("code-pages/mh1-primprod/npp_utils.qmd",
+     "npp_utils.py",
+     "python",
+     "Cloud Run utilities for downloading inputs, running NPP calculations, and publishing outputs.",
+     "workflows/mh1-primprod/src/npp_utils.py"),
+
+    ("code-pages/mh1-primprod/primprodUtil.qmd",
+     "primprodUtil.py",
+     "python",
+     "Primary productivity model utilities and daylength calculations.",
+     "workflows/mh1-primprod/src/primprodUtil.py"),
+
+    ("code-pages/mh1-primprod/ppCompositeUtil.qmd",
+     "ppCompositeUtil.py",
+     "python",
+     "Legacy productivity composite helper utilities retained with the workflow.",
+     "workflows/mh1-primprod/src/ppCompositeUtil.py"),
+
+         # =========================================================
+    # NSIDC SEA ICE
+    # =========================================================
+
+    ("code-pages/nsidc/dockerfile.qmd",
+     "Dockerfile",
+     "dockerfile",
+     "Container environment for the NSIDC sea ice workflow.",
+     "workflows/nsidc/Dockerfile"),
+
+    ("code-pages/nsidc/entrypoint.qmd",
+     "entrypoint.sh",
+     "bash",
+     "Cloud Run entrypoint for daily and monthly NSIDC processing.",
+     "workflows/nsidc/entrypoint.sh"),
+
+    ("code-pages/nsidc/deploy_job.qmd",
+     "deploy_job.sh",
+     "bash",
+     "Builds, deploys, and schedules the NSIDC Cloud Run jobs.",
+     "workflows/nsidc/deploy_job.sh"),
+
+    ("code-pages/nsidc/config.qmd",
+     "config.yaml",
+     "yaml",
+     "Runtime configuration for NSIDC daily and monthly processing.",
+     "workflows/nsidc/config/config.yaml"),
+
+    ("code-pages/nsidc/requirements.qmd",
+     "requirements.txt",
+     "text",
+     "Python dependencies for the NSIDC container.",
+     "workflows/nsidc/config/requirements.txt"),
+
+    ("code-pages/nsidc/control_nsidc.qmd",
+     "control_nsidc.py",
+     "python",
+     "Controller for NSIDC daily and monthly Cloud Run jobs.",
+     "workflows/nsidc/scripts/control_nsidc.py"),
+
+    ("code-pages/nsidc/make_nsidc_daily_v6.qmd",
+     "make_nsidc_daily_v6.py",
+     "python",
+     "Builds daily NSIDC G02202 v6 sea ice products.",
+     "workflows/nsidc/scripts/make_nsidc_daily_v6.py"),
+
+    ("code-pages/nsidc/make_nsidc_monthly_v6.qmd",
+     "make_nsidc_monthly_v6.py",
+     "python",
+     "Builds monthly NSIDC G02202 v6 sea ice composites.",
+     "workflows/nsidc/scripts/make_nsidc_monthly_v6.py"),
+
 ]
 
 template = """---

@@ -1,0 +1,18 @@
+---
+title: "config.yml"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../mh1-primprod.html)
+
+Runtime configuration for MODIS-Aqua primary productivity processing.
+
+::: {.code-shell}
+
+```{.yaml}
+{{< include ../../workflows/mh1-primprod/config/config.yml >}}
+```
+
+:::

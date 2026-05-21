@@ -1,0 +1,18 @@
+---
+title: "Dockerfile"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Container environment for the CRW SST/SSTA workflow.
+
+::: {.code-shell}
+
+```{.dockerfile}
+{{< include ../../workflows/crw/Dockerfile >}}
+```
+
+:::

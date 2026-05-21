@@ -1,0 +1,18 @@
+---
+title: "ascat_c.cdl"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+CDL template for ASCAT-C CoastWatch-compatible NetCDF outputs.
+
+::: {.code-shell}
+
+```{.text}
+{{< include ../../workflows/ascat/templates/ascat_c.cdl >}}
+```
+
+:::

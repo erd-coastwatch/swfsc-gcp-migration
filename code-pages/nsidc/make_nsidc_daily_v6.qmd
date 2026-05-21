@@ -1,0 +1,18 @@
+---
+title: "make_nsidc_daily_v6.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../nsidc.html)
+
+Builds daily NSIDC G02202 v6 sea ice products.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/nsidc/scripts/make_nsidc_daily_v6.py >}}
+```
+
+:::

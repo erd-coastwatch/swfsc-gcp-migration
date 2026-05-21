@@ -1,0 +1,18 @@
+---
+title: "ascat_composite_control.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+Controller for daily multi-day and monthly ASCAT composite jobs.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/ascat/scripts/ascat_composite_control.py >}}
+```
+
+:::

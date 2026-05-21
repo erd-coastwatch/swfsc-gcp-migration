@@ -1,0 +1,18 @@
+---
+title: "control_nsidc.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../nsidc.html)
+
+Controller for NSIDC daily and monthly Cloud Run jobs.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/nsidc/scripts/control_nsidc.py >}}
+```
+
+:::

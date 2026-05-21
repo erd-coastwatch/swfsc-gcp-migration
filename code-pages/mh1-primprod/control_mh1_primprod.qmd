@@ -1,0 +1,18 @@
+---
+title: "control_mh1_primprod.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../mh1-primprod.html)
+
+Controller for daily and backfill MODIS-Aqua MH1 primary productivity runs.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/mh1-primprod/scripts/control_mh1_primprod.py >}}
+```
+
+:::

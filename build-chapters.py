@@ -23,9 +23,13 @@ top_chapters = [
         "part": "Workflows",
         "chapters": [
             "mh1-processor.qmd",
+            "mh1-primprod.qmd",
             "viirs-netpp.qmd",
             "mur-sst.qmd",
             "charm.qmd",
+            "crw.qmd",
+            "ascat.qmd",
+            "nsidc.qmd",
         ],
     },
     {

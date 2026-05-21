@@ -1,0 +1,154 @@
+---
+title: "MODIS-Aqua Primary Productivity"
+---
+
+This chapter documents the Cloud Run workflow for generating MODIS-Aqua MH1 net primary productivity products for ERDDAP publication.
+
+The workflow uses MODIS-Aqua chlorophyll-a, PAR, SST, and daylength inputs to compute satellite-derived primary productivity. It is containerized for Cloud Run Jobs and publishes final NetCDF products to cloud storage for ERDDAP ingestion.
+
+## Purpose
+
+The MH1 primary productivity workflow extends the MODIS-Aqua MH1 product family by generating daily net primary productivity outputs from existing ocean-color, SST, and light-field inputs.
+
+The workflow is designed to:
+
+- run operationally as a scheduled Cloud Run Job
+- process recent daily dates in near-real time
+- support backfill processing over historical date ranges
+- write ERDDAP-facing NetCDF outputs
+- publish completed products to cloud storage
+- keep large static inputs, such as daylength arrays, out of Git
+
+## Repository structure
+
+```text
+mh1-primprod/
+├── config/
+│   ├── config.yml          # Runtime configuration
+│   └── requirements.txt    # Python dependencies
+├── deploy_job.sh           # Build, deploy, and schedule Cloud Run job
+├── Dockerfile              # Container definition
+├── entrypoint.sh           # Container startup script
+├── scripts/
+│   └── control_mh1_primprod.py
+├── src/
+│   ├── npp_utils.py
+│   ├── primprodUtil.py
+│   ├── ppCompositeUtil.py
+│   └── __init__.py
+└── templates/
+    └── daylen.nc           # Large static daylength file; excluded from public code rendering
+```
+
+## Processing model
+
+The workflow computes primary productivity from daily satellite inputs. The active Cloud Run controller coordinates date selection, input discovery, processing, and publication.
+
+At a high level, each run follows this sequence:
+
+```text
+Cloud Scheduler
+  -> Cloud Run Job
+  -> entrypoint.sh
+  -> scripts/control_mh1_primprod.py
+  -> src/npp_utils.py
+  -> src/primprodUtil.py
+  -> NetCDF output
+  -> cloud publication
+  -> ERDDAP ingestion
+```
+
+The productivity calculation uses the legacy primary productivity utilities retained in `src/primprodUtil.py`, while Cloud Run-specific orchestration, download, staging, and publishing behavior is handled by `src/npp_utils.py`.
+
+## Runtime behavior
+
+The workflow supports operational recent-date runs and historical backfills.
+
+Typical processing behavior includes:
+
+1. Resolve the requested processing date or date range.
+2. Locate required MODIS-Aqua input products.
+3. Stage inputs in the container runtime filesystem.
+4. Load the static daylength data.
+5. Compute primary productivity.
+6. Write the output NetCDF product.
+7. Compress or finalize the NetCDF output as configured.
+8. Publish the final product to cloud storage.
+9. Clean temporary files.
+
+The container uses `/tmp` for writable runtime work because Cloud Run containers should not rely on persistent local state.
+
+## Runtime configuration
+
+Runtime settings are defined in `config/config.yml` and supplemented by environment variables set at deployment time.
+
+Configuration and runtime settings include:
+
+| Area | Purpose |
+|---|---|
+| Input locations | Paths or cloud prefixes for chlorophyll-a, PAR, SST, and supporting inputs. |
+| Output locations | Publication bucket and prefixes for ERDDAP-facing products. |
+| Runtime paths | Local scratch, template, and working directories. |
+| Processing dates | Recent-run and backfill date selection. |
+| Static assets | Daylength input file expected by the productivity model. |
+
+The public documentation copy shown here is sanitized. Deployment-specific values such as bucket names, project IDs, service accounts, private paths, and credentials are shown with generic placeholders.
+
+## Static daylength file
+
+The workflow depends on a static daylength NetCDF file:
+
+```text
+templates/daylen.nc
+```
+
+This file is large and should not be committed to the Quarto documentation repository. The workflow documentation notes its required role, but the binary file is intentionally excluded from rendered code pages and from the sanitized public workflow copy.
+
+If the workflow is deployed or rebuilt, the daylength file should be supplied through the operational repository, a controlled artifact, or cloud storage rather than embedded in the public documentation site.
+
+## Codebase {.unnumbered}
+
+The files linked below provide a view of the workflow code used by this processor. Deployment-specific values such as bucket names, project IDs, service accounts, private paths, and credentials are shown with generic placeholders.
+
+```{=html}
+<div class="file-grid">
+
+<div class="file-card">
+<h3>Deployment</h3>
+<p>Container build, Cloud Run startup, deployment, runtime configuration, and dependencies.</p>
+<ul>
+<li><a href="code-pages/mh1-primprod/dockerfile.html">Dockerfile</a></li>
+<li><a href="code-pages/mh1-primprod/entrypoint.html">entrypoint.sh</a></li>
+<li><a href="code-pages/mh1-primprod/deploy_job.html">deploy_job.sh</a></li>
+<li><a href="code-pages/mh1-primprod/config.html">config.yml</a></li>
+<li><a href="code-pages/mh1-primprod/requirements.html">requirements.txt</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Workflow controller</h3>
+<p>Top-level date selection, processing orchestration, and Cloud Run workflow control.</p>
+<ul>
+<li><a href="code-pages/mh1-primprod/control_mh1_primprod.html">control_mh1_primprod.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Processing utilities</h3>
+<p>Cloud Run utilities, primary productivity model logic, and legacy composite helpers.</p>
+<ul>
+<li><a href="code-pages/mh1-primprod/npp_utils.html">npp_utils.py</a></li>
+<li><a href="code-pages/mh1-primprod/primprodUtil.html">primprodUtil.py</a></li>
+<li><a href="code-pages/mh1-primprod/ppCompositeUtil.html">ppCompositeUtil.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Static assets</h3>
+<p>The large static daylength NetCDF file is required operationally but is not rendered as a code page.</p>
+<ul>
+<li><code>templates/daylen.nc</code></li>
+</ul>
+</div>
+
+</div>

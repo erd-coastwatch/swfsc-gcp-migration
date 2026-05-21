@@ -1,0 +1,159 @@
+---
+title: "CRW SST/SSTA"
+---
+
+This chapter documents the Cloud Run workflow for generating NOAA Coral Reef Watch (CRW) 5 km sea surface temperature (SST) and sea surface temperature anomaly (SSTA) products for ERDDAP publication.
+
+The workflow downloads daily and monthly CRW NetCDF source products, combines SST and SSTA fields into ERDDAP-facing NetCDF outputs, compresses the results, archives source files, and publishes final products to cloud storage.
+
+## Purpose
+
+The CRW workflow maintains combined SST/SSTA products derived from NOAA Coral Reef Watch source files. These products support ERDDAP access to daily and monthly CRW temperature fields using a consistent output structure and file naming pattern.
+
+The workflow produces two main product streams:
+
+| Product stream | Output prefix | Output pattern |
+|---|---|---|
+| Daily CRW SST/SSTA | `satellite/CRW2/1day/` | `ct5km_sst_ssta_daily_v31_YYYYMMDD.nc` |
+| Monthly CRW SST/SSTA | `satellite/CRW2/mday/` | `ct5km_sst_ssta_monthly_v31_YYYYMM.nc` |
+
+Raw source files are archived separately under a source-data prefix so the final merged products can be regenerated if needed.
+
+## Repository structure
+
+```text
+crw/
+├── config/
+│   ├── config.yml          # Reserved for future runtime configuration
+│   └── requirements.txt    # Python dependencies
+├── deploy_job.sh           # Build, deploy, and schedule Cloud Run jobs
+├── Dockerfile              # Container definition
+├── entrypoint.sh           # Cloud Run job dispatcher
+├── scripts/
+│   ├── control_crw_daily.py
+│   ├── control_crw_monthly.py
+│   ├── update_sst_ssta_daily.py
+│   └── update_sst_ssta_monthly.py
+├── src/
+│   └── __init__.py
+└── templates/
+    └── lat_lon_source2023b.nc
+```
+
+## Cloud Run jobs
+
+The same container image is used for both daily and monthly processing. The `JOB_TYPE` environment variable controls which controller is run by `entrypoint.sh`.
+
+| Job type | Controller | Description |
+|---|---|---|
+| `daily` | `control_crw_daily.py` | Checks for missing daily CRW SST/SSTA outputs and builds recent missing days. |
+| `monthly` | `control_crw_monthly.py` | Checks for missing monthly CRW SST/SSTA outputs over a rolling two-year window. |
+
+The deployment script creates two Cloud Run Jobs:
+
+| Cloud Run Job | Runtime mode | Schedule |
+|---|---|---|
+| `crw-daily-processor` | `JOB_TYPE=daily` | Daily at 10:00 America/Los_Angeles |
+| `crw-monthly-processor` | `JOB_TYPE=monthly` | 04:00 America/Los_Angeles on days 2, 4, 10, 12, 15, and 18 of each month |
+
+The monthly schedule mirrors the legacy retry cadence and gives upstream monthly CRW files multiple chances to appear before the workflow stops checking.
+
+## Daily processing
+
+The daily controller evaluates a short lookback window, skips dates already present in cloud storage, and calls the daily worker only for missing final outputs.
+
+By default, daily processing checks the last three days, excluding today. For backfills, `BACKFILL_START_DATE=YYYY-MM-DD` can be set to evaluate all dates from that start date through yesterday while still skipping outputs that already exist.
+
+For each daily date, the worker:
+
+1. Downloads the daily CRW SST file.
+2. Downloads the daily CRW SSTA file.
+3. Archives both source files to the work/source bucket.
+4. Copies the static latitude/longitude template into a temporary output file.
+5. Reads SST, SSTA, and mask variables from the source files.
+6. Aligns SST latitude orientation to the output template.
+7. Writes SST, SSTA, mask, and time values into the merged NetCDF output.
+8. Compresses the merged output with `nccopy`.
+9. Uploads the final daily product to cloud storage.
+10. Removes temporary local files.
+
+## Monthly processing
+
+The monthly controller evaluates a rolling two-year monthly window through the previous completed month. It checks cloud storage for existing monthly products and only builds missing months.
+
+For each missing month, the worker:
+
+1. Downloads the monthly CRW SST mean file.
+2. Downloads the monthly CRW SSTA mean file.
+3. Archives both source files to the work/source bucket.
+4. Copies the static latitude/longitude template into a temporary output file.
+5. Writes monthly SST, SSTA, mask, and time values into the merged NetCDF output.
+6. Compresses the merged output with `nccopy`.
+7. Uploads the final monthly product to cloud storage.
+8. Removes temporary local files.
+
+## Runtime configuration
+
+The workflow is currently configured mostly through environment variables and script-level constants.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `GCS_BUCKET` | production bucket | Target bucket for final ERDDAP-facing outputs |
+| `JOB_TYPE` | `monthly` | Selects `daily` or `monthly` processing |
+| `LOOKBACK_DAYS` | `3` | Number of recent days evaluated by the daily controller |
+| `BACKFILL_START_DATE` | unset | Optional daily backfill start date in `YYYY-MM-DD` format |
+
+The current `config/config.yml` file is reserved for future configuration centralization. Unlike some of the other workflows in this book, this workflow still keeps several source URLs, output prefixes, and archive settings directly in the scripts.
+
+## Static template
+
+The workflow uses `templates/lat_lon_source2023b.nc` as the static output template/grid source for the merged products.
+
+Because this is a binary NetCDF file, it is included in the workflow repository but is not rendered as a Quarto code page.
+
+## Codebase {.unnumbered}
+
+The files linked below provide a view of the workflow code used by this processor. Deployment-specific values such as bucket names, project IDs, service accounts, and private paths are shown with generic placeholders.
+
+```{=html}
+<div class="file-grid">
+
+<div class="file-card">
+<h3>Deployment</h3>
+<p>Container build, Cloud Run dispatch, deployment, scheduling, and runtime dependencies.</p>
+<ul>
+<li><a href="code-pages/crw/dockerfile.html">Dockerfile</a></li>
+<li><a href="code-pages/crw/entrypoint.html">entrypoint.sh</a></li>
+<li><a href="code-pages/crw/deploy_job.html">deploy_job.sh</a></li>
+<li><a href="code-pages/crw/requirements.html">requirements.txt</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Daily processing</h3>
+<p>Daily CRW controller and daily SST/SSTA product builder.</p>
+<ul>
+<li><a href="code-pages/crw/control_crw_daily.html">control_crw_daily.py</a></li>
+<li><a href="code-pages/crw/update_sst_ssta_daily.html">update_sst_ssta_daily.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Monthly processing</h3>
+<p>Monthly CRW controller and monthly SST/SSTA product builder.</p>
+<ul>
+<li><a href="code-pages/crw/control_crw_monthly.html">control_crw_monthly.py</a></li>
+<li><a href="code-pages/crw/update_sst_ssta_monthly.html">update_sst_ssta_monthly.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Static template</h3>
+<p>The binary NetCDF template/grid file is included in the workflow repository but not rendered as a code page.</p>
+<ul>
+<li><code>templates/lat_lon_source2023b.nc</code></li>
+</ul>
+</div>
+
+</div>
+```

@@ -1,0 +1,18 @@
+---
+title: "ascatc_multiday_functions.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+Shared functions for ASCAT-C multi-day and monthly composite generation.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/ascat/src/ascatc_multiday_functions.py >}}
+```
+
+:::

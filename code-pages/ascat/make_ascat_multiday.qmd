@@ -1,0 +1,18 @@
+---
+title: "make_ascat_multiday.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../ascat.html)
+
+Builds 1-day, 3-day, 7-day, and monthly ASCAT-C wind composites.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/ascat/scripts/make_ascat_multiday.py >}}
+```
+
+:::

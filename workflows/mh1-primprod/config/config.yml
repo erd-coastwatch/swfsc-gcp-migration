@@ -1,0 +1,40 @@
+# MH1 Primary Productivity Cloud Run configuration
+# Mirrors the on-prem cron split:
+#   daily      -> AYYYYDDD.L3m_DAY_primprod.nc
+#   3-day comp -> AYYYYDDD_start_AYYYYDDD_end_3day_primprod.nc
+#   8-day comp -> AYYYYDDD_start_AYYYYDDD_end_8day_primprod.nc
+
+gcs:
+  bucket: YOUR_PRODUCTION_BUCKET
+
+  # Input prefixes contain the NRT source products:
+  #   CHL: AQUA_MODIS.YYYYMMDD.L3m.DAY.CHL.chlor_a.4km.NRT.nc
+  #   PAR: AQUA_MODIS.YYYYMMDD.L3m.DAY.PAR.par.4km.NRT.nc
+  #   SST: AQUA_MODIS.YYYYMMDD.L3m.DAY.SSTMasked.sst.4km.NRT.nc
+  input_prefixes:
+    chl: satellite/MH1_NRT/chla/1day
+    par: satellite/MH1_NRT/par/1day
+    sst: satellite/MH1_NRT/sstMask/1day
+
+  # Output prefixes mirror the on-prem /u00/satellite/PPMH paths.
+  output_prefixes:
+    daily: satellite/PPMH/1day
+    composite_3: satellite/PPMH/3day
+    composite_8: satellite/PPMH/8day
+
+  # Keep false to match on-prem flat folders.
+  # Set true if you want /YYYY/ under each prefix.
+  year_partition_outputs: false
+  year_partition_inputs: false
+
+runtime:
+  # On-prem jobs used current date minus 2 days.
+  days_lag: 2
+  work_base: /tmp/work
+  results_base: /tmp/results
+  reference_dir: /app/templates
+  keep_local_results: false
+  overwrite: false
+
+reference_files:
+  world_daylength: worlddaylen.nc

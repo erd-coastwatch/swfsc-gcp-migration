@@ -1,0 +1,18 @@
+---
+title: "requirements.txt"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Python dependencies for the CRW container.
+
+::: {.code-shell}
+
+```{.text}
+{{< include ../../workflows/crw/config/requirements.txt >}}
+```
+
+:::

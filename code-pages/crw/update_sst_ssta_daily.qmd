@@ -1,0 +1,18 @@
+---
+title: "update_sst_ssta_daily.py"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Builds one daily combined CRW SST/SSTA NetCDF product.
+
+::: {.code-shell}
+
+```{.python}
+{{< include ../../workflows/crw/scripts/update_sst_ssta_daily.py >}}
+```
+
+:::

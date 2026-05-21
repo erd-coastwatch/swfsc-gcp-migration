@@ -1,0 +1,148 @@
+---
+title: "NSIDC Sea Ice"
+---
+
+This chapter documents the Cloud Run workflow for processing NSIDC G02202 v6 sea ice concentration products for ERDDAP publication.
+
+The workflow downloads or stages NSIDC source data, prepares daily sea ice files, builds monthly composites, and publishes ERDDAP-facing NetCDF outputs to cloud storage.
+
+## Purpose
+
+The NSIDC workflow supports operational publication of sea ice concentration products from the NSIDC Climate Data Record product family.
+
+The workflow is designed to:
+
+- process daily NSIDC G02202 v6 sea ice concentration files
+- build monthly composites from daily products
+- support scheduled Cloud Run execution
+- publish outputs to cloud storage for ERDDAP ingestion
+- keep the daily and monthly workflow logic in a single containerized repository
+
+## Repository structure
+
+```text
+nsidc/
+├── config/
+│   ├── config.yaml        # Runtime configuration
+│   └── requirements.txt   # Python dependencies
+├── deploy_job.sh          # Build, deploy, and schedule Cloud Run jobs
+├── Dockerfile             # Container definition
+├── entrypoint.sh          # Cloud Run job dispatcher
+├── scripts/
+│   ├── control_nsidc.py
+│   ├── make_nsidc_daily_v6.py
+│   └── make_nsidc_monthly_v6.py
+└── src/
+    └── __init__.py
+```
+
+## Cloud Run jobs
+
+The same container image supports daily and monthly processing. Runtime behavior is selected by the container entrypoint and job configuration.
+
+| Processing mode | Script | Description |
+|---|---|---|
+| Daily | `make_nsidc_daily_v6.py` | Processes daily NSIDC G02202 v6 sea ice concentration files. |
+| Monthly | `make_nsidc_monthly_v6.py` | Builds monthly sea ice composites from daily products. |
+| Controller | `control_nsidc.py` | Coordinates date selection and dispatches the requested workflow mode. |
+
+## Daily workflow
+
+The daily workflow prepares ERDDAP-facing NSIDC sea ice concentration files from daily source data.
+
+A typical daily run follows this sequence:
+
+1. Resolve the requested processing date or recent-date window.
+2. Locate the corresponding NSIDC G02202 v6 daily source file.
+3. Stage the source file in the container runtime filesystem.
+4. Prepare the output NetCDF file and metadata.
+5. Publish the final daily product to cloud storage.
+6. Clean temporary runtime files.
+
+Daily products are organized by hemisphere, date, and year so ERDDAP can scan stable cloud-backed directory structures.
+
+## Monthly workflow
+
+The monthly workflow builds monthly sea ice concentration composites from daily products.
+
+A typical monthly run follows this sequence:
+
+1. Resolve the target month, usually the previous completed month.
+2. Locate all available daily products for that month.
+3. Combine daily fields into a monthly product.
+4. Write monthly metadata and time coverage values.
+5. Publish the final monthly composite to cloud storage.
+6. Clean temporary runtime files.
+
+## Runtime configuration
+
+Runtime settings are defined in `config/config.yaml` and supplemented by environment variables set at deployment time.
+
+Configuration areas include:
+
+| Area | Purpose |
+|---|---|
+| Source paths | Location of NSIDC source products or staging inputs. |
+| Output paths | Cloud bucket and prefixes for ERDDAP-facing products. |
+| Runtime paths | Local scratch directories used by Cloud Run. |
+| Processing mode | Daily or monthly workflow behavior. |
+| Date selection | Recent run, target date, target month, or backfill settings. |
+| Publication | Final cloud-storage destinations for ERDDAP ingestion. |
+
+The public documentation copy shown here is sanitized. Deployment-specific values such as bucket names, project IDs, service accounts, private paths, and credentials are shown with generic placeholders.
+
+## Output organization
+
+The workflow publishes NSIDC sea ice outputs into cloud-storage paths intended for ERDDAP scanning.
+
+Expected product families include:
+
+| Product family | Description |
+|---|---|
+| Daily sea ice concentration | Daily NSIDC G02202 v6 sea ice concentration products. |
+| Monthly sea ice concentration | Monthly composites derived from daily sea ice concentration files. |
+
+## Codebase {.unnumbered}
+
+The files linked below provide a view of the workflow code used by this processor. Deployment-specific values such as bucket names, project IDs, service accounts, private paths, and credentials are shown with generic placeholders.
+
+```{=html}
+<div class="file-grid">
+
+<div class="file-card">
+<h3>Deployment</h3>
+<p>Container build, Cloud Run startup, deployment, scheduling, runtime configuration, and dependencies.</p>
+<ul>
+<li><a href="code-pages/nsidc/dockerfile.html">Dockerfile</a></li>
+<li><a href="code-pages/nsidc/entrypoint.html">entrypoint.sh</a></li>
+<li><a href="code-pages/nsidc/deploy_job.html">deploy_job.sh</a></li>
+<li><a href="code-pages/nsidc/config.html">config.yaml</a></li>
+<li><a href="code-pages/nsidc/requirements.html">requirements.txt</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Workflow control</h3>
+<p>Date selection and dispatch logic for daily and monthly NSIDC processing.</p>
+<ul>
+<li><a href="code-pages/nsidc/control_nsidc.html">control_nsidc.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Daily processing</h3>
+<p>Daily NSIDC G02202 v6 sea ice product generation.</p>
+<ul>
+<li><a href="code-pages/nsidc/make_nsidc_daily_v6.html">make_nsidc_daily_v6.py</a></li>
+</ul>
+</div>
+
+<div class="file-card">
+<h3>Monthly processing</h3>
+<p>Monthly sea ice composite generation from daily products.</p>
+<ul>
+<li><a href="code-pages/nsidc/make_nsidc_monthly_v6.html">make_nsidc_monthly_v6.py</a></li>
+</ul>
+</div>
+
+</div>

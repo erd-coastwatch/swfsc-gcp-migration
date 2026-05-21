@@ -1,0 +1,18 @@
+---
+title: "entrypoint.sh"
+toc: false
+page-layout: full
+number-sections: false
+---
+
+[← Back to workflow](../../crw.html)
+
+Cloud Run entrypoint; dispatches daily or monthly CRW processing.
+
+::: {.code-shell}
+
+```{.bash}
+{{< include ../../workflows/crw/entrypoint.sh >}}
+```
+
+:::
