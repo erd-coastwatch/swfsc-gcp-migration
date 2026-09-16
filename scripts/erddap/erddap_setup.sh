@@ -182,33 +182,22 @@ case "$(uname -m)" in
 esac
 
 log "Resolving and downloading Temurin JDK ${JAVA_VERSION}"
-JAVA_API_VERSION="${JAVA_VERSION//+/%2B}"
-JAVA_METADATA_URL="https://api.adoptium.net/v3/assets/version/${JAVA_API_VERSION}?architecture=${JAVA_ARCH}&heap_size=normal&image_type=jdk&jvm_impl=hotspot&os=linux&project=jdk&release_type=ga&vendor=eclipse"
-curl --fail --location --silent --show-error --retry 3 --retry-all-errors \
-    --output "${TEMP_DIR}/java.json" "${JAVA_METADATA_URL}"
-
-readarray -t JAVA_ASSET < <(python3 - "${TEMP_DIR}/java.json" <<'PY'
-import json
-import sys
-
-with open(sys.argv[1], encoding="utf-8") as source:
-    assets = json.load(source)
-if not assets:
-    raise SystemExit("Adoptium returned no matching JDK asset")
-package = assets[0]["binary"]["package"]
-print(package["link"])
-print(package["checksum"])
-PY
-)
-[[ ${#JAVA_ASSET[@]} -eq 2 ]] || die "Could not parse the Adoptium release metadata."
-
+JAVA_MAJOR="${JAVA_VERSION%%.*}"
+JAVA_RELEASE_TAG="jdk-${JAVA_VERSION//+/%2B}"
+JAVA_FILE_VERSION="${JAVA_VERSION/+/_}"
+JAVA_FILE="OpenJDK${JAVA_MAJOR}U-jdk_${JAVA_ARCH}_linux_hotspot_${JAVA_FILE_VERSION}.tar.gz"
+JAVA_BASE_URL="https://github.com/adoptium/temurin${JAVA_MAJOR}-binaries/releases/download/${JAVA_RELEASE_TAG}"
 curl --fail --location --show-error --retry 3 --retry-all-errors \
-    --output "${TEMP_DIR}/temurin-jdk.tar.gz" "${JAVA_ASSET[0]}"
-printf '%s  %s\n' "${JAVA_ASSET[1]}" "${TEMP_DIR}/temurin-jdk.tar.gz" | sha256sum --check --status || \
+    --output "${TEMP_DIR}/${JAVA_FILE}" "${JAVA_BASE_URL}/${JAVA_FILE}"
+curl --fail --location --show-error --retry 3 --retry-all-errors \
+    --output "${TEMP_DIR}/${JAVA_FILE}.sha256.txt" "${JAVA_BASE_URL}/${JAVA_FILE}.sha256.txt"
+JAVA_EXPECTED_SHA256="$(awk '{print $1}' "${TEMP_DIR}/${JAVA_FILE}.sha256.txt")"
+JAVA_ACTUAL_SHA256="$(sha256sum "${TEMP_DIR}/${JAVA_FILE}" | awk '{print $1}')"
+[[ "${JAVA_ACTUAL_SHA256}" == "${JAVA_EXPECTED_SHA256}" ]] || \
     die "Temurin JDK checksum verification failed."
 
 mkdir "${TEMP_DIR}/java"
-tar -xzf "${TEMP_DIR}/temurin-jdk.tar.gz" -C "${TEMP_DIR}/java"
+tar -xzf "${TEMP_DIR}/${JAVA_FILE}" -C "${TEMP_DIR}/java"
 JAVA_EXTRACTED="$(find "${TEMP_DIR}/java" -mindepth 1 -maxdepth 1 -type d -print -quit)"
 [[ -n "${JAVA_EXTRACTED}" ]] || die "The JDK archive did not contain a top-level directory."
 JAVA_INSTALL="${INSTALL_DIR}/$(basename -- "${JAVA_EXTRACTED}")"
