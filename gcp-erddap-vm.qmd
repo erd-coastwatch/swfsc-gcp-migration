@@ -146,48 +146,70 @@ rclone rc vfs/stats       # Monitor cache usage and read-ahead status
 
 ### 2. Install and Configure ERDDAP
 
-#### 2.1 Run the CoastWatch ERDDAP Installation Script
+#### 2.1 Run the SWFSC ERDDAP Installation Script
 
-This setup uses the [CoastWatch ERDDAP installation script](https://github.com/erd-coastwatch/cloud-erddap-setup/blob/main/setup_scripts/erddap_setup.sh) to install Tomcat, ERDDAP, Java dependencies, and supporting system configuration.
+The installation script installs pinned versions of Java, Tomcat, ERDDAP, and the required system dependencies. It also configures the `tomcat-erddap` systemd service and ERDDAP's persistent working directory.
 
 ```{.bash}
-wget https://raw.githubusercontent.com/erd-coastwatch/cloud-erddap-setup/main/setup_scripts/erddap_setup.sh
-chmod +x erddap_setup.sh
-./erddap_setup.sh
+wget -O erddap_setup.sh \
+  https://raw.githubusercontent.com/erd-coastwatch/swfsc-gcp-migration/main/scripts/erddap/erddap_setup.sh
 
-# If reinstalling, remove the previous Tomcat installation first
-sudo rm -rf /usr/local/apache-tomcat-10.1.44/
+chmod 700 erddap_setup.sh
+bash -n erddap_setup.sh
 ./erddap_setup.sh
 ```
 
-#### 2.2 Configure Tomcat and ERDDAP
+The installer enables the `tomcat-erddap` service but does not start it. This allows `setup.xml` and `datasets.xml` to be configured before ERDDAP begins loading datasets.
+
+The installer refuses to overwrite an existing Java or Tomcat installation. ERDDAP upgrades should be performed as a separate, planned operation.
+
+#### 2.2 Configure ERDDAP
+
+Review and update the ERDDAP configuration:
 
 ```{.bash}
-sudo su -s /bin/bash tomcat
-cd /usr/local/tomcat_erddap/conf
-vi server.xml
+sudoedit /usr/local/tomcat_erddap/content/erddap/setup.xml
+sudoedit /usr/local/tomcat_erddap/content/erddap/datasets.xml
+```
 
-cd /usr/local/tomcat_erddap/content/erddap
-vi setup.xml
+The default persistent working directory is:
+
+```text
+/mnt/disks/erddap-data/erddap/
+```
+
+Confirm the configuration file permissions:
+
+```{.bash}
+sudo chown tomcat:cwatch \
+  /usr/local/tomcat_erddap/content/erddap/setup.xml \
+  /usr/local/tomcat_erddap/content/erddap/datasets.xml
+
+sudo chmod 640 \
+  /usr/local/tomcat_erddap/content/erddap/setup.xml \
+  /usr/local/tomcat_erddap/content/erddap/datasets.xml
 ```
 
 #### 2.3 Start and Verify ERDDAP
 
 ```{.bash}
-# Start ERDDAP
-sudo su -s /bin/bash tomcat
-cd /usr/local/tomcat_erddap/bin
-./startup.sh
+sudo systemctl start tomcat-erddap
+sudo systemctl --no-pager --full status tomcat-erddap
 
-# Stop ERDDAP
-./shutdown.sh
+curl -I http://127.0.0.1:8080/erddap/index.html
+```
 
-# Verify installation
-curl http://localhost:8080
+Follow the service log during the initial dataset load:
 
-# Install additional dependencies
-sudo apt install -y fontconfig
-sudo apt install -y lynx
+```{.bash}
+sudo journalctl -u tomcat-erddap -f
+```
+
+Stop or restart ERDDAP with:
+
+```{.bash}
+sudo systemctl stop tomcat-erddap
+sudo systemctl restart tomcat-erddap
 ```
 
 ---
