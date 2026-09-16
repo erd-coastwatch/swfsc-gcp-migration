@@ -1,0 +1,45 @@
+---
+title: "Project Architecture"
+page-layout: full
+toc: false
+number-sections: false
+---
+
+This chapter describes the high-level cloud architecture used for the SWFSC ERDDAP migration. The design separates data serving, data processing, storage, scheduling, deployment, and secret management into distinct components. That separation makes the system easier to maintain, rebuild, monitor, and extend as additional workflows are migrated.
+
+At a high level, the architecture includes:
+
+- a dedicated ERDDAP VM for public data serving;
+- attached disks for ERDDAP cache, logs, and local working directories;
+- Google Cloud Storage buckets for production and staging data;
+- processing VMs for heavier jobs, testing, and backfills;
+- Cloud Run Jobs for operational containerized workflows;
+- Artifact Registry for container images;
+- Cloud Scheduler for recurring execution;
+- Secret Manager for runtime credentials; and
+- Terraform for managing the core infrastructure.
+
+## Design pattern
+
+The migration uses a decoupled architecture. Processing systems generate or transform datasets and write outputs to cloud storage. ERDDAP then serves those datasets from a production bucket mounted into the ERDDAP VM. This avoids tightly coupling the public data-serving system to any single workflow implementation.
+
+The main operating pattern is:
+
+1. workflow code is packaged into containers;
+2. images are stored in Artifact Registry;
+3. Cloud Run Jobs or processing VMs execute workflows;
+4. outputs are written to work or production buckets;
+5. ERDDAP reads production-ready files from the mounted production bucket; and
+6. updated datasets are served publicly through ERDDAP.
+
+## Architecture diagram
+
+```{=html}
+{{< include assets/architecture/gcp-architecture.html >}}
+```
+
+
+
+## Why this structure works
+
+This design keeps serving, processing, and storage responsibilities separate. The ERDDAP server remains focused on data access and public distribution, while workflows can evolve independently as VM-based or serverless jobs. Google Cloud Storage provides the shared data layer between systems, and Terraform keeps the infrastructure reproducible and maintainable.

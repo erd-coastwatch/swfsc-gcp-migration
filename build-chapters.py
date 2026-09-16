@@ -17,6 +17,7 @@ top_chapters = [
             "gcp-processing-vm.qmd",
             "gcp-migration-recovery.qmd",
             "gcp-templates.qmd",
+            "architecture.qmd"
         ],
     },
     {

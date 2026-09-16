@@ -4,7 +4,7 @@ project:
   pre-render: python build-chapters.py
   resources:
   - workflows/**
-  - assets/presentations/**
+  - assets/**
 book:
   title: SWFSC ERDDAP Cloud Migration
   sidebar:
@@ -22,6 +22,7 @@ book:
     - gcp-processing-vm.qmd
     - gcp-migration-recovery.qmd
     - gcp-templates.qmd
+    - architecture.qmd
   - part: Workflows
     chapters:
     - mh1-processor.qmd
