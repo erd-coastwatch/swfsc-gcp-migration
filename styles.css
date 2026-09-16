@@ -5,6 +5,16 @@
 body {
   background: white;
   font-size: 16px;
+  line-height: 1.65;
+  color: #1e2d3a;
+}
+
+/* Constrain prose width for comfortable reading */
+.quarto-container .column-body,
+#quarto-document-content > p,
+#quarto-document-content > ol,
+#quarto-document-content > ul {
+  max-width: 780px;
 }
 
 /* ======================
@@ -47,8 +57,35 @@ body {
    Typography
 ====================== */
 
-h1, h2, h3 {
+h1 {
+  color: #0b3c5d;
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  line-height: 1.25;
+}
+
+h2 {
   color: #164a73;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 2.4rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #dbe8ef;
+  line-height: 1.3;
+}
+
+h3 {
+  color: #164a73;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1.6rem;
+  margin-bottom: 0.45rem;
+}
+
+p {
+  margin-bottom: 1rem;
 }
 
 a {
@@ -61,7 +98,7 @@ a:hover {
 }
 
 /* ======================
-   FILE GRID (NEW)
+   FILE GRID
 ====================== */
 
 .file-grid {
@@ -75,25 +112,28 @@ a:hover {
   border: 1px solid #dbe4ea;
   border-radius: 10px;
   background: #f8fafc;
-  padding: 1rem 1.15rem;
-  transition: box-shadow 0.2s ease;
+  padding: 1.1rem 1.25rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .file-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+  border-color: #b8cfe0;
 }
 
 .file-card h3 {
   margin-top: 0;
   margin-bottom: 0.35rem;
   color: #164a73;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
+  border: none;
 }
 
 .file-card p {
   color: #5f6f7a;
   margin-bottom: 0.75rem;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .file-card ul {
@@ -103,6 +143,8 @@ a:hover {
 
 .file-card li {
   margin-bottom: 0.45rem;
+  font-size: 0.93rem;
+  color: #2d3f4d;
 }
 
 .file-card a {
@@ -113,35 +155,83 @@ a:hover {
   margin-top: 1rem;
   margin-bottom: 0.35rem;
   color: #465a69;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: none;
 }
 
 /* ======================
-   TABLE CLEANUP (if used)
+   TABLE
 ====================== */
 
 table {
-  font-size: 15px;
+  font-size: 14.5px;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.2rem 0 1.6rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+thead tr {
+  background-color: #eef3f7;
 }
 
 th {
   background-color: #eef3f7;
   font-weight: 600;
+  color: #164a73;
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 2px solid #d0dce6;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 td {
-  vertical-align: middle;
+  vertical-align: top;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid #eaeff3;
+  line-height: 1.5;
+  color: #2d3f4d;
 }
 
+tbody tr:hover {
+  background-color: #f4f8fb;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Strong in td (component names) */
+td:first-child {
+  font-weight: 600;
+  color: #164a73;
+  white-space: nowrap;
+}
+
+/* ======================
+   CODE BLOCKS
+====================== */
+
 pre {
-  background: #f8fafc;
+  background: #f5f8fb;
   border: 1px solid #dbe4ea;
   border-radius: 10px;
   padding: 1rem 1.25rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-x: auto;
 }
 
+code {
+  font-size: 0.875em;
+}
 
 /* Wide rendered code pages */
 .code-page pre {
@@ -155,13 +245,13 @@ pre {
   white-space: pre !important;
 }
 
-
 /* GitHub-style source pages */
 .code-shell {
   border: 1px solid #d0d7de;
   border-radius: 10px;
   overflow: hidden;
   background: #ffffff;
+  margin: 1rem 0;
 }
 
 .code-shell-header {
@@ -169,7 +259,7 @@ pre {
   border-bottom: 1px solid #d0d7de;
   padding: 0.65rem 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #24292f;
 }
@@ -191,7 +281,6 @@ pre {
    Presentation Slideshow
 ====================== */
 
-/* Wider content area for presentation page */
 .page-columns {
   max-width: 1800px !important;
 }
@@ -200,7 +289,6 @@ pre {
   max-width: 1600px !important;
 }
 
-/* Main slideshow frame */
 .slideshow {
   position: relative;
   width: 98%;
@@ -209,10 +297,9 @@ pre {
   background: #0b0f14;
   border-radius: 14px;
   padding: 1.25rem;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
-/* Slide image */
 .slide-show-img {
   width: 100%;
   display: block;
@@ -220,13 +307,12 @@ pre {
   background: white;
 }
 
-/* Navigation buttons */
 .slide-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   border: none;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   color: white;
   font-size: 2.25rem;
   line-height: 1;
@@ -237,30 +323,20 @@ pre {
 }
 
 .slide-btn:hover {
-  background: rgba(0,0,0,0.75);
+  background: rgba(0, 0, 0, 0.75);
   transform: translateY(-50%) scale(1.04);
 }
 
-.prev {
-  left: 2rem;
-}
+.prev { left: 2rem; }
+.next { right: 2rem; }
 
-.next {
-  right: 2rem;
-}
-
-/* Slide number */
 .slide-counter {
   text-align: center;
   margin-top: 0.85rem;
-  color: #555;
-  font-size: 0.95rem;
+  color: #6b7d8a;
+  font-size: 0.92rem;
 }
 
-#quarto-sidebar li:has(a[href*="code-pages/"]) {
-  display: none;
-}
-
-#quarto-sidebar li:has(a[href*="Code: "]) {
-  display: none;
-}
+/* Hide code-pages from sidebar */
+#quarto-sidebar li:has(a[href*="code-pages/"]) { display: none; }
+#quarto-sidebar li:has(a[href*="Code: "]) { display: none; }

@@ -101,7 +101,7 @@ The workflow uses static NetCDF templates and mask/grid assets to standardize ou
 <ul>
 <li><a href="code-pages/charm/dockerfile.html">Dockerfile</a></li>
 <li><a href="code-pages/charm/entrypoint.html">entrypoint.sh</a></li>
-<li><a href="code-pages/charm/delpoy_job.html">delpoy_job.sh</a></li>
+<li><a href="code-pages/charm/deploy_job.html">deploy_job.sh</a></li>
 <li><a href="code-pages/charm/config.html">config.yaml</a></li>
 <li><a href="code-pages/charm/requirements.html">requirements.txt</a></li>
 </ul>

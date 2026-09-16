@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Project Architecture – SWFSC ERDDAP Cloud Migration</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./mh1-processor.html" rel="next">
+<link href="./gcp-templates.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-065a5179aebd64318d7ea99d77b64a9e.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-25a4e8620ae17d49cd0c3861fdf92567.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="./index.html" class="sidebar-logo-link">
+      <img src="./assets/logo.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="./assets/logo.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">SWFSC ERDDAP Cloud Migration</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Cloud Setup</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Setup Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-infrastructure.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Cloud Infrastructure Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-vm-access.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Accessing VMs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-erddap-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ERDDAP VM Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-processing-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Processing VM Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-migration-recovery.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Migration, Upgrade, and Recovery</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GCP Data Processing Templates</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./architecture.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Project Architecture</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Workflows</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mh1-processor.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mh1-primprod.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MODIS-Aqua Primary Productivity</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./viirs-netpp.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">VIIRS Net Primary Productivity</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mur-sst.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MUR SST</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./charm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">CHARM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./crw.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">CRW SST/SSTA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ascat.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ASCAT-C Wind Products</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./nsidc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">NSIDC Sea Ice</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Presentations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./erddap-cloud-migration-presentations.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ERDDAP Cloud Migration Presentations</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: ascat</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/ascat_c_cdl.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascat_c.cdl</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/ascat_composite_control.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascat_composite_control.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/ascatc_4hr_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascatc_4hr_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/ascatc_multiday_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascatc_multiday_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/config_composite.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config_composite.yaml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/config_update.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config_update.yaml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/download_ascat_4hr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">download_ascat_4hr.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/example_cdl.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">example.cdl</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/make_ascat_multiday.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_ascat_multiday.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/ascat/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: charm</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/charm_data_process_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_data_process_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/charm_dineof_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_dineof_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/charm_helper_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_helper_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/charm_model_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_model_functions.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yaml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/control_charm_cron_v1.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_charm_cron_v1.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_Rrs_489_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_Rrs_489_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_Rrs_556_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_Rrs_556_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_bf_Rrs_489_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_bf_Rrs_489_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_bf_Rrs_556_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_bf_Rrs_556_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_bf_chlor_a_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_bf_chlor_a_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/for_chlor_a_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">for_chlor_a_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/make_charm_cloud_v1.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_charm_cloud_v1.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_Rrs_489_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_Rrs_489_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_Rrs_556_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_Rrs_556_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_bf_Rrs_489_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_bf_Rrs_489_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_bf_Rrs_556_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_bf_Rrs_556_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_bf_chlor_a_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_bf_chlor_a_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/now_chlor_a_v4.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">now_chlor_a_v4.init</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/charm/viirs_L3.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">viirs_L3.cdl</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: crw</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/control_crw_daily.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_crw_daily.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/control_crw_monthly.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_crw_monthly.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/update_sst_ssta_daily.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">update_sst_ssta_daily.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/crw/update_sst_ssta_monthly.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">update_sst_ssta_monthly.py</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: mh1-primprod</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/control_mh1_primprod.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_mh1_primprod.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/npp_utils.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">npp_utils.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/ppCompositeUtil.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ppCompositeUtil.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/primprodUtil.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">primprodUtil.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-primprod/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: mh1-processor</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMH1OceanColor_NRT.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMH1OceanColor_NRT.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMH1OceanColor_Sci.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMH1OceanColor_Sci.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMH1SST_NRT.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMH1SST_NRT.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMH1SST_Sci.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMH1SST_Sci.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMPIC_NRT.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMPIC_NRT.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMPIC_Sci.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMPIC_Sci.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMPOC_NRT.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMPOC_NRT.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/getMPOC_Sci.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">getMPOC_Sci.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mh1-processor/roylib.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">roylib.py</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: mur-sst</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/Canny1.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Canny1.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/Canny2.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Canny2.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/CompMURmon.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">CompMURmon.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/CompMurAnomMon.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">CompMurAnomMon.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/MUR41_MonProc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MUR41_MonProc.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/MURanom1day.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MURanom1day.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/calc_mur_fronts.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">calc_mur_fronts.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/canny_lib.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">canny_lib.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/mur_v41_downloader_dailyproc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">mur_v41_downloader_dailyproc.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/mur_v42_downloader.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">mur_v42_downloader.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/mur-sst/roylib.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">roylib.py</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: nsidc</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yaml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/control_nsidc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_nsidc.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/make_nsidc_daily_v6.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_nsidc_daily_v6.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/make_nsidc_monthly_v6.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_nsidc_monthly_v6.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/nsidc/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code: viirs-netpp</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/control_viirs_netpp.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_viirs_netpp.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/control_viirs_netpp_monthly.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_viirs_netpp_monthly.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/deploy_job.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">deploy_job.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/dockerfile.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Dockerfile</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/entrypoint.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">entrypoint.sh</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/make_viirs_netpp.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_viirs_netpp.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/make_viirs_netpp_monthly.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">make_viirs_netpp_monthly.py</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./code-pages/viirs-netpp/requirements.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">requirements.txt</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Project Architecture</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta column-page-right">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This chapter describes the high-level cloud architecture used for the SWFSC ERDDAP migration. The design separates data serving, data processing, storage, scheduling, deployment, and secret management into distinct components. That separation makes the system easier to maintain, rebuild, monitor, and extend as additional workflows are migrated.</p>
+<p>At a high level, the architecture includes:</p>
+<ul>
+<li>a dedicated ERDDAP VM for public data serving;</li>
+<li>attached disks for ERDDAP cache, logs, and local working directories;</li>
+<li>Google Cloud Storage buckets for production and staging data;</li>
+<li>processing VMs for heavier jobs, testing, and backfills;</li>
+<li>Cloud Run Jobs for operational containerized workflows;</li>
+<li>Artifact Registry for container images;</li>
+<li>Cloud Scheduler for recurring execution;</li>
+<li>Secret Manager for runtime credentials; and</li>
+<li>Terraform for managing the core infrastructure.</li>
+</ul>
+<section id="design-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="design-pattern">Design pattern</h2>
+<p>The migration uses a decoupled architecture. Processing systems generate or transform datasets and write outputs to cloud storage. ERDDAP then serves those datasets from a production bucket mounted into the ERDDAP VM. This avoids tightly coupling the public data-serving system to any single workflow implementation.</p>
+<p>The main operating pattern is:</p>
+<ol type="1">
+<li>workflow code is packaged into containers;</li>
+<li>images are stored in Artifact Registry;</li>
+<li>Cloud Run Jobs or processing VMs execute workflows;</li>
+<li>outputs are written to work or production buckets;</li>
+<li>ERDDAP reads production-ready files from the mounted production bucket; and</li>
+<li>updated datasets are served publicly through ERDDAP.</li>
+</ol>
+</section>
+<section id="architecture-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-diagram">Architecture diagram</h2>
+<!-- GCP Architecture — include with {{< include gcp-architecture.html >}} -->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+.ga-wrap{
+  font-family:inherit;
+  max-width:1180px;
+  margin:1.5rem auto;
+  padding-top:28px;
+}
+/* ── regions ── */
+.ga-vpc{
+  position:relative;
+  background:#f0fdf4;
+  border:2px solid #86efac;
+  border-radius:14px;
+  padding:14px;
+}
+.ga-zone{background:#f0f9ff;border:1.5px dashed #7dd3fc;border-radius:10px;padding:12px 12px 10px;margin-bottom:12px;}
+.ga-storage-box{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px 8px;}
+.ga-section{border-radius:10px;padding:10px 10px 8px;}
+.ga-sec-erddap{background:#faf5ff;border:1.5px solid #d8b4fe;}
+.ga-sec-ce{background:#eff6ff;border:1.5px dashed #93c5fd;}
+.ga-sec-cr{background:#faf5ff;border:1.5px dashed #c4b5fd;}
+.ga-region-lbl{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  margin-bottom:9px;
+}.lbl-vpc{color:#15803d;}.lbl-zone{color:#0369a1;}
+.lbl-erddap{color:#7c3aed;}.lbl-ce{color:#1d4ed8;}
+.lbl-cr{color:#7c3aed;}.lbl-store{color:#15803d;}
+
+/* ── flex helpers ── */
+.ga-row{display:flex;gap:10px;align-items:stretch;}
+.ga-col{display:flex;flex-direction:column;gap:8px;}
+.ga-sections{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.ga-bottom{display:flex;gap:10px;align-items:flex-start;margin-top:0;}
+.ga-services{display:flex;gap:8px;flex:1;align-items:flex-start;}
+
+/* ── nodes ── */
+.ga-node{display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:white;border:1.5px solid #e2e8f0;border-radius:10px;
+  padding:10px 8px 8px;cursor:pointer;text-align:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  transition:box-shadow .14s,border-color .14s,transform .1s;}
+.ga-node:hover{box-shadow:0 4px 14px rgba(0,0,0,.13);border-color:#818cf8;transform:translateY(-1px);}
+.ga-node img,
+.ga-node svg{
+  width:46px;
+  height:46px;
+  display:block;
+}
+.ga-node-title{
+  font-size:14px;
+  font-weight:700;
+  color:#1e293b;
+  line-height:1.3;
+}
+.ga-node-sub{
+  font-size:11.5px;
+  color:#64748b;
+  line-height:1.35;
+}
+/* ── person nodes ── */
+.ga-person{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+.ga-person-icon{width:46px;height:46px;border-radius:50%;background:#1e293b;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .14s;}
+.ga-person:hover .ga-person-icon{background:#6366f1;}
+.ga-person-lbl{
+  font-size:12px;
+  font-weight:700;
+  color:#1e293b;
+  text-align:center;
+  line-height:1.3;
+}
+
+.ga-dev-person{gap:0px;}
+.ga-dev-person .ga-person-lbl{margin-bottom:0;}
+
+
+/* ── connector between stacked nodes ── */
+.ga-connector{display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:1px 0;}
+.ga-connector-line{width:1.5px;height:24px;background:#cbd5e1;flex-shrink:0;}
+.ga-connector-label{font-size:9px;color:#94a3b8;font-style:italic;white-space:nowrap;}
+
+/* ── scalable badge ── */
+.ga-scalable{
+  margin-top:4px;
+  border:1px dashed #cbd5e1;
+  border-radius:7px;
+  padding:6px 8px;
+  text-align:center;
+  font-size:11px;
+  color:#64748b;
+  background:rgba(255,255,255,.6);
+  line-height:1.35;
+}
+
+/* Curved rclone connector from ERDDAP stack to Production Bucket */
+.ga-vpc-main{
+  position:relative;
+  min-width:0;
+}
+
+.ga-rclone-bridge{
+  position:absolute;
+  left:0;
+  right:0;
+  top:286px;
+  height:172px;
+  z-index:16;
+  pointer-events:none;
+}
+
+.ga-rclone-labelbox{
+  position:absolute;
+  left:calc(16.666% + 105px);
+  top:0;
+  transform:translateX(-50%);
+  width:220px;
+  z-index:30;
+  text-align:center;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:6px;
+  padding:3px 6px 4px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+  pointer-events:auto;
+}
+
+.ga-rclone-long-label{
+  display:inline-block;
+  background:#faf5ff;
+  border:1px solid rgba(249,115,22,.18);
+  border-bottom:none;
+  border-radius:6px 6px 0 0;
+  padding:2px 6px;
+  font-size:10px;
+  font-weight:800;
+  color:#ea580c;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+  line-height:1.15;
+  white-space:nowrap;
+}
+
+.ga-rclone-long-sub{
+  display:block;
+  background:#faf5ff;
+  border:1px solid rgba(249,115,22,.18);
+  border-top:none;
+  border-radius:0 0 6px 6px;
+  padding:0 6px 2px 6px;
+  font-size:9.5px;
+  color:#9a3412;
+  font-style:italic;
+  line-height:1.15;
+  white-space:nowrap;
+}
+
+.ga-rclone-curve{
+  position:absolute;
+  inset:20px 0 0 0;
+  width:100%;
+  height:calc(100% - 20px);
+  overflow:visible;
+  pointer-events:none;
+}
+
+.ga-rclone-path{
+  fill:none;
+  stroke:#f97316;
+  stroke-width:2.25;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:6 6;
+  vector-effect:non-scaling-stroke;
+}
+
+/* ── LB → VPC arrow ── */
+.ga-entry{display:flex;align-items:center;gap:0;}
+.ga-arrow-h{display:flex;align-items:center;}
+.ga-arrow-h span{display:block;height:1.5px;background:#475569;width:32px;}
+.ga-arrow-h::after{content:'▶';font-size:9px;color:#475569;margin-left:-1px;}
+
+/* ── outer frame: users | vpc | developer ── */
+.ga-frame{
+  display:grid;
+  grid-template-columns: 118px 1fr;
+  gap:8px;
+  align-items:start;
+}
+
+/* External users sit outside the VPC, aligned with the load balancer */
+.ga-left{
+  display:flex;
+  justify-content:flex-end;
+  padding-top:118px;
+}
+
+.ga-user-flow{
+  display:grid;
+  grid-template-columns: 72px 30px;
+  align-items:center;
+  column-gap:6px;
+}
+
+.ga-user-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+/* Cleaner arrow: thin line + CSS triangle, no text glyph */
+.ga-arrow-right{
+  position:relative;
+  width:100%;
+  height:12px;
+}
+
+.ga-arrow-right::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:7px;
+  top:5px;
+  height:2px;
+  background:#475569;
+  border-radius:2px;
+}
+
+.ga-arrow-right::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:1px;
+  width:0;
+  height:0;
+  border-top:5px solid transparent;
+  border-bottom:5px solid transparent;
+  border-left:8px solid #475569;
+}
+
+/* VPC content: load balancer, arrow, main zone/storage */
+.ga-vpc-layout{
+  display:grid;
+  grid-template-columns: 96px 26px 1fr;
+  gap:8px;
+  align-items:start;
+}
+
+.ga-lb-column{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:70px;
+}
+
+.ga-lb-node{
+  width:92px;
+  padding:10px 8px 9px;
+}
+
+.ga-lb-link-wrap{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:118px;
+}
+
+.ga-lb-link{
+  width:100%;
+}
+
+.ga-vpc-main{
+  min-width:0;
+}
+
+.ga-right{
+  position:absolute;
+  top:0;
+  right:0;
+  transform:translate(50%, -50px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  z-index:20;
+}
+
+/* ── Terraform footer ── */
+.ga-tf-banner{margin-top:10px;background:#fefce8;border:1.5px solid #fde047;
+  border-radius:10px;padding:10px 16px;display:flex;align-items:center;
+  gap:12px;cursor:pointer;transition:box-shadow .14s;}
+.ga-tf-banner:hover{box-shadow:0 3px 12px rgba(234,179,8,.3);}
+.ga-tf-badge{background:#eab308;color:white;font-weight:800;font-size:12px;
+  border-radius:6px;padding:4px 10px;white-space:nowrap;flex-shrink:0;}
+.ga-tf-text{
+  font-size:13.5px;
+  color:#78350f;
+  line-height:1.45;
+}.ga-tf-text strong{font-weight:700;}
+
+/* ── modal ── */
+.ga-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);
+  z-index:9998;backdrop-filter:blur(2px);}
+.ga-overlay.on{display:block;}
+.ga-modal{display:none;position:fixed;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.96);
+  width:min(500px,93vw);background:white;border-radius:16px;
+  box-shadow:0 24px 60px rgba(0,0,0,.22);z-index:9999;
+  padding:1.4rem 1.6rem 1.25rem;opacity:0;
+  transition:transform .17s ease,opacity .17s ease;}
+.ga-modal.on{display:block;transform:translate(-50%,-50%) scale(1);opacity:1;}
+.ga-mhdr{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.8rem;}
+.ga-mtitle{font-size:1.05rem;font-weight:700;color:#0f172a;}
+.ga-mtag{margin-top:.2rem;font-size:.72rem;font-weight:600;color:#475569;
+  background:#e2e8f0;border-radius:20px;padding:2px 9px;display:inline-block;}
+.ga-mclose{width:26px;height:26px;border:none;background:#f1f5f9;border-radius:50%;
+  cursor:pointer;font-size:15px;color:#64748b;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;transition:background .12s;}
+.ga-mclose:hover{background:#e2e8f0;color:#1e293b;}
+.ga-mbody{font-size:.9rem;color:#334155;line-height:1.7;}
+.ga-mnote{font-size:.8rem;color:#64748b;font-style:italic;line-height:1.55;
+  border-left:3px solid #e2e8f0;padding-left:.7rem;margin-top:.7rem;}
+.ga-modal code{background:#e2e8f0;border-radius:4px;padding:1px 5px;font-size:.8em;}
+
+.ga-storage-arrow-lane{
+  height:34px;
+}
+
+.ga-storage-subtitle{
+  font-size:10.5px;
+  color:#475569;
+  line-height:1.35;
+  margin:8px 2px 0 2px;
+  text-align:center;
+}
+
+.ga-prod-bucket{
+  border-color:#fb923c;
+  box-shadow:0 0 0 2px rgba(249,115,22,.12), 0 1px 3px rgba(0,0,0,.06);
+}
+
+.ga-storage-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+
+
+/* ==========================================================
+   Final rclone cleanup
+   - lowers the orange callout
+   - removes the nested purple label boxes
+   - prevents any clipping around the ERDDAP section
+   - keeps the curved connector clear of the storage title
+========================================================== */
+.ga-vpc,
+.ga-vpc-layout,
+.ga-vpc-main,
+.ga-zone,
+.ga-sections,
+.ga-section,
+.ga-sec-erddap,
+.ga-storage-box{
+  overflow:visible;
+}
+
+.ga-sec-erddap{
+  padding-bottom:12px;
+}
+
+.ga-rclone-bridge{
+  top:286px;
+  height:190px;
+  z-index:18;
+  overflow:visible;
+}
+
+.ga-rclone-labelbox{
+  left:16.666%;
+  top:24px;
+  width:252px;
+  transform:translateX(-50%);
+  background:#fff7ed;
+  border:1.5px solid #fed7aa;
+  border-radius:8px;
+  padding:5px 9px 6px;
+  box-shadow:0 1px 3px rgba(124,45,18,.12);
+  overflow:visible;
+  pointer-events:auto;
+}
+
+.ga-rclone-long-label,
+.ga-rclone-long-sub{
+  display:block;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  padding:0;
+  white-space:nowrap;
+  overflow:visible;
+  text-align:center;
+}
+
+.ga-rclone-long-label{
+  font-size:10px;
+  font-weight:800;
+  color:#ea580c;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+  line-height:1.15;
+}
+
+.ga-rclone-long-sub{
+  margin-top:2px;
+  font-size:9.5px;
+  color:#9a3412;
+  font-style:italic;
+  line-height:1.15;
+}
+
+.ga-rclone-curve{
+  inset:76px 0 0 0;
+  height:calc(100% - 76px);
+  overflow:visible;
+}
+
+.ga-rclone-path{
+  stroke-width:2;
+  stroke-dasharray:5 6;
+}
+
+/* Keep the rclone label inside the ERDDAP purple panel, not floating over the layout */
+.ga-rclone-inline-box{
+  align-self:center;
+  width:calc(100% - 18px);
+  max-width:210px;
+  margin:6px auto 0 auto;
+  background:#fff7ed;
+  border:1.5px solid #fed7aa;
+  border-radius:8px;
+  padding:4px 7px 5px;
+  box-shadow:0 1px 3px rgba(124,45,18,.12);
+  cursor:pointer;
+  text-align:center;
+}
+
+.ga-rclone-inline-box:hover{
+  background:#ffedd5;
+  border-color:#f97316;
+}
+
+.ga-rclone-inline-box .ga-rclone-long-label{
+  font-size:9.3px;
+  letter-spacing:.03em;
+  line-height:1.12;
+  white-space:nowrap;
+}
+
+.ga-rclone-inline-box .ga-rclone-long-sub{
+  margin-top:2px;
+  font-size:8.5px;
+  line-height:1.12;
+  white-space:normal;
+}
+
+.ga-storage-arrow-lane{
+  height:48px;
+}
+
+</style>
+
+<div class="ga-wrap">
+  <div class="ga-frame">
+
+    <!-- ── LEFT: External users ── -->
+    <div class="ga-left">
+      <div class="ga-user-flow">
+        <div class="ga-user-block ga-person" onclick="gm('users')">
+          <div class="ga-person-icon">
+            <svg width="26" height="26" viewbox="0 0 24 24" fill="none" stroke="white" stroke-width="1.9" stroke-linecap="round">
+              <circle cx="12" cy="7" r="4"></circle>
+              <path d="M4 21v-1a8 8 0 0 1 16 0v1"></path>
+            </svg>
+          </div>
+          <div class="ga-person-lbl">External<br>End Users</div>
+        </div>
+
+        <div class="ga-arrow-right"></div>
+      </div>
+    </div>
+
+    <!-- ── CENTRE: VPC ── -->
+    <div class="ga-vpc">
+      <div class="ga-region-lbl lbl-vpc">Google Cloud Platform — Region / VPC</div>
+
+      <!-- ── TOP RIGHT: Scientist / Developer ── -->
+    <div class="ga-right">
+    <div class="ga-person ga-dev-person" onclick="gm('dev')">
+        <div class="ga-person-lbl">Scientist /<br>Developer</div>
+        <div class="ga-person-icon">
+        <svg width="26" height="26" viewbox="0 0 24 24" fill="none" stroke="white" stroke-width="1.9" stroke-linecap="round">
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M4 21v-1a8 8 0 0 1 16 0v1"></path>
+        </svg>
+        </div>
+    </div>
+    </div>
+
+
+      <div class="ga-vpc-layout">
+
+        <!-- load balancer, no separate ingress lane -->
+        <div class="ga-lb-column">
+          <div class="ga-node ga-lb-node" onclick="gm('lb')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOm5vbmU7fS5jbHMtMntmaWxsOiM2NjlkZjY7fS5jbHMtM3tmaWxsOiM0Mjg1ZjQ7fS5jbHMtNHtmaWxsOiNhZWNiZmE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfTG9hZEJhbGFuY2luZ19Db2xvcjwvdGl0bGU+PGcgZGF0YS1uYW1lPSJQcm9kdWN0IEljb25zIj48ZyBkYXRhLW5hbWU9ImNvbG9yZWQtMzIvbG9hZC1iYWxhbmNpbmciPjxyZWN0IGNsYXNzPSJjbHMtMSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ii8+PGcgPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iMTgiIHk9IjEyIiB3aWR0aD0iMiIgaGVpZ2h0PSI0Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSIxMSIgeT0iMTIiIHdpZHRoPSIyIiBoZWlnaHQ9IjQiLz48cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjQiIHk9IjEyIiB3aWR0aD0iMiIgaGVpZ2h0PSI0Ii8+PHBvbHlnb24gaWQ9IkZpbGwtMiIgY2xhc3M9ImNscy0zIiBwb2ludHM9IjEzIDExIDExIDExIDExIDcgMTMgNyAxMyAxMSIvPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iNCIgeT0iMTEiIHdpZHRoPSIxNiIgaGVpZ2h0PSIyIi8+PHJlY3QgY2xhc3M9ImNscy00IiB4PSI2IiB5PSIyIiB3aWR0aD0iMTIiIGhlaWdodD0iNSIvPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iMTIiIHk9IjIiIHdpZHRoPSI2IiBoZWlnaHQ9IjUiLz48cmVjdCBjbGFzcz0iY2xzLTQiIHg9IjE2IiB5PSIxNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIvPjxyZWN0IGNsYXNzPSJjbHMtNCIgeD0iMiIgeT0iMTYiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiLz48cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjUiIHk9IjE2IiB3aWR0aD0iMyIgaGVpZ2h0PSI2Ii8+PHJlY3QgY2xhc3M9ImNscy00IiB4PSI5IiB5PSIxNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIvPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iMTIiIHk9IjE2IiB3aWR0aD0iMyIgaGVpZ2h0PSI2Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSIxOSIgeT0iMTYiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiLz48L2c+PC9nPjwvZz48L3N2Zz4=" alt="LB">
+            <div class="ga-node-title">Load<br>Balancer</div>
+          </div>
+        </div>
+
+        <!-- Load balancer to ERDDAP arrow -->
+        <div class="ga-lb-link-wrap">
+          <div class="ga-arrow-right ga-lb-link"></div>
+        </div>
+
+        <!-- main architecture -->
+        <div class="ga-vpc-main">
+
+        <div class="ga-rclone-bridge">
+          <svg class="ga-rclone-curve" viewbox="0 0 100 100" preserveaspectratio="none" aria-hidden="true">
+            <defs>
+              <marker id="ga-rclone-arrowhead" markerwidth="6" markerheight="6" refx="5" refy="3" orient="auto" markerunits="userSpaceOnUse">
+  <path d="M 0 0 L 6 3 L 0 6 z" fill="#f97316"></path>
+</marker>
+            </defs>
+            <path class="ga-rclone-path" marker-end="url(#ga-rclone-arrowhead)" d="M16.666,10 L16.666,50 C16.666,66 25,66 25,80 L25,88"></path>
+          </svg>
+        </div>
+
+        <!-- Zone / Subnet -->
+        <div class="ga-zone">
+        <div class="ga-region-lbl lbl-zone">Zone / Subnet</div>
+        <div class="ga-sections">
+
+          <!-- ERDDAP serving -->
+          <div class="ga-section ga-sec-erddap">
+            <div class="ga-region-lbl lbl-erddap">ERDDAP Serving</div>
+            <div class="ga-col">
+              <div class="ga-node" onclick="gm('erddap')">
+                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0zODAuNywzOTYuN2gtMjQ5LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtMjQ5LjNjMC04LjgsNy4yLTE2LDE2LTE2aDI0OS4zYzguOCwwLDE2LDcuMiwxNiwxNnYyNDkuM2MwLDguOC03LjIsMTYtMTYsMTZaTTE0Ny4zLDM2NC43aDIxNy4zdi0yMTcuM2gtMjE3LjN2MjE3LjNaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMTQ3LjMsMzY0LjdoLTMydi0yMzMuM2MwLTguOCw3LjItMTYsMTYtMTZoMTQ2LjF2MzJoLTEzMC4xdjIxNy4zaDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNDQzLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQzLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTQ0MywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTM0OS41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0yNTYsMTQ3LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtNjIuM2MwLTguOCw3LjItMTYsMTYtMTZzMTYsNy4yLDE2LDE2djYyLjNjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTE2Mi41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0zMTUsMzMxaC0xMThjLTguOCwwLTE2LTcuMi0xNi0xNnYtMTE4YzAtOC44LDcuMi0xNiwxNi0xNmgxMThjOC44LDAsMTYsNy4yLDE2LDE2djExOGMwLDguOC03LjIsMTYtMTYsMTZaTTIxMywyOTloODZ2LTg2aC04NnY4NloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0zOTYuNywzMzIuN2gtMzJ2LTE4NS4zaC0xMjQuNnYtMzJoMTQwLjZjOC44LDAsMTYsNy4yLDE2LDE2djIwMS4zWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTE2Mi41LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMjU2LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMzQ5LjUsNDU5Yy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xMzEuMywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgPC9nPgo8L3N2Zz4=" alt="VM">
+                <div class="ga-node-title">ERDDAP VM</div>
+              </div>
+              <div class="ga-connector">
+                <div class="ga-connector-line"></div>
+              </div>
+              <div class="ga-node" onclick="gm('edisk')">
+                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4zLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNTEpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQyNy40OTEsMjU1Ljg0bC0uMDk0LjA3OC4wNTQuMDgyLTExMy4yMzEsMTcwaC04OS42NDlsLTE4LjU3MiwxMC44NTItMi43NjIsMjEuMTQ4aDEwNy4wMzRjMTMuMTA2LDAsMjUuMzU1LTYuNjM3LDMyLjc2Ny0xNy43NTVsMTAzLjY4OS0xNTUuNTUxLTEuOTI5LTI0LjczLTE3LjMwNy00LjEyNGgwWiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5OS4zNTQsMjM0LjEyMmwtNTAuMTQtNzUuMjA5LTE5LjIxNiw2LjMzNnYyMi41MDVsNDUuNTA2LDY4LjI0Ni00NS41MDYsNjguMjQ2djIwLjUzMmwxOS4yMTYsOC4zMSw1MC4xMzktNzUuMjA5YzguODYxLTEzLjI5MSw4Ljg2MS0zMC40NjcsMC00My43NTdoLjAwMVoiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxwYXRoIGQ9Ik0xOTEuOTM5LDQxNy4yMTRoMGwtMTA3LjQxLTE2MS4yMTQsMTA3LjQyMi0xNjEuMjMyLjAyMy0yMC45MzMtMTguOTI2LTcuNDJjLTEuNDg0LDEuNTgxLTIuODYsMy4yODQtNC4wODcsNS4xMjRMNjAuNjM2LDIzNC4wNDRjLTguODQ4LDEzLjI3My04Ljg0OCwzMC40MjUsMCw0My42OTRsMTA4LjMyNiwxNjIuNTA4YzEuMjQ4LDEuODcxLDIuNjQzLDMuNjAzLDQuMTQ1LDUuMjEsMCwuMDAxLjAwMi4wMDIuMDAzLjAwM2wxOC44NjUtNi45NTctLjAzNS0yMS4yODdoLS4wMDFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjk5LjQ0NSwyNTZsLTEwNy41MDUsMTYxLjIxNGgwbC0xOC44MywyOC4yNDVjNy40MjUsNy45MzksMTcuNzIsMTIuNTQxLDI4LjYxOSwxMi41NDFoMS41MDlsMjEuMzM0LTMyLDk0LjEzOS0xNDEuMTAzLTMuMTczLTIzLjk0NC0xNi4wOTMtNC45NTNaIiBmaWxsPSIjMzRhODUzIi8+CiAgICA8cGF0aCBkPSJNNDUxLjM2NCwyMzQuMDQ1bC0xMDguMzI2LTE2Mi41MDhjLTcuMzIyLTEwLjk4MS0xOS41Ny0xNy41MzctMzIuNzY3LTE3LjUzN2gtMTA4LjU0M2MtMTAuOTczLDAtMjEuMjc5LDQuNTQ0LTI4LjY1NCwxMi4zODVsMTguODk5LDI4LjM0OS0uMDIzLjAzNGgwbC4wMTItLjAxOSwxMDcuNDgxLDE2MS4yNTEsMTkuMjY2LDI4Ljg5Nyw0LjY0NS02Ljk2MmM4Ljg1OS0xMy4yOSw4Ljg1OS0zMC40NjYsMC00My43NTVsLTk4Ljc2Ny0xNDguMTgxaDg5LjYzMmwxMTMuMTc3LDE2OS45MTguMDk0LS4wNzgsMTkuMjM2LDI4Ljg1NCw0LjYzNi02Ljk1NGM4Ljg0OS0xMy4yNzEsOC44NDktMzAuNDIyLjAwMS00My42OTRoMFoiIGZpbGw9IiNlYTQzMzUiLz4KICA8L2c+Cjwvc3ZnPg==" alt="Hyperdisk">
+                <div class="ga-node-title">Hyperdisk</div>
+              </div>
+
+              <div class="ga-rclone-inline-box" onclick="gm('rclone')">
+                <div class="ga-rclone-long-label">Persistent rclone mount</div>
+                <div class="ga-rclone-long-sub">ERDDAP reads GCS Production Bucket</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compute Engines -->
+          <div class="ga-section ga-sec-ce">
+            <div class="ga-region-lbl lbl-ce">Compute Engines</div>
+            <div class="ga-col">
+              <div class="ga-node" onclick="gm('vm')">
+                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0zODAuNywzOTYuN2gtMjQ5LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtMjQ5LjNjMC04LjgsNy4yLTE2LDE2LTE2aDI0OS4zYzguOCwwLDE2LDcuMiwxNiwxNnYyNDkuM2MwLDguOC03LjIsMTYtMTYsMTZaTTE0Ny4zLDM2NC43aDIxNy4zdi0yMTcuM2gtMjE3LjN2MjE3LjNaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMTQ3LjMsMzY0LjdoLTMydi0yMzMuM2MwLTguOCw3LjItMTYsMTYtMTZoMTQ2LjF2MzJoLTEzMC4xdjIxNy4zaDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNDQzLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQzLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTQ0MywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTM0OS41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0yNTYsMTQ3LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtNjIuM2MwLTguOCw3LjItMTYsMTYtMTZzMTYsNy4yLDE2LDE2djYyLjNjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTE2Mi41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0zMTUsMzMxaC0xMThjLTguOCwwLTE2LTcuMi0xNi0xNnYtMTE4YzAtOC44LDcuMi0xNiwxNi0xNmgxMThjOC44LDAsMTYsNy4yLDE2LDE2djExOGMwLDguOC03LjIsMTYtMTYsMTZaTTIxMywyOTloODZ2LTg2aC04NnY4NloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0zOTYuNywzMzIuN2gtMzJ2LTE4NS4zaC0xMjQuNnYtMzJoMTQwLjZjOC44LDAsMTYsNy4yLDE2LDE2djIwMS4zWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTE2Mi41LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMjU2LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMzQ5LjUsNDU5Yy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xMzEuMywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgPC9nPgo8L3N2Zz4=" alt="VM">
+                <div class="ga-node-title">Processing VM</div>
+              </div>
+              <div class="ga-connector">
+                <div class="ga-connector-line"></div>
+                <div class="ga-connector-label">mounted</div>
+                <div class="ga-connector-line"></div>
+              </div>
+              <div class="ga-node" onclick="gm('vmdisk')">
+                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4zLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNTEpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQyNy40OTEsMjU1Ljg0bC0uMDk0LjA3OC4wNTQuMDgyLTExMy4yMzEsMTcwaC04OS42NDlsLTE4LjU3MiwxMC44NTItMi43NjIsMjEuMTQ4aDEwNy4wMzRjMTMuMTA2LDAsMjUuMzU1LTYuNjM3LDMyLjc2Ny0xNy43NTVsMTAzLjY4OS0xNTUuNTUxLTEuOTI5LTI0LjczLTE3LjMwNy00LjEyNGgwWiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5OS4zNTQsMjM0LjEyMmwtNTAuMTQtNzUuMjA5LTE5LjIxNiw2LjMzNnYyMi41MDVsNDUuNTA2LDY4LjI0Ni00NS41MDYsNjguMjQ2djIwLjUzMmwxOS4yMTYsOC4zMSw1MC4xMzktNzUuMjA5YzguODYxLTEzLjI5MSw4Ljg2MS0zMC40NjcsMC00My43NTdoLjAwMVoiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxwYXRoIGQ9Ik0xOTEuOTM5LDQxNy4yMTRoMGwtMTA3LjQxLTE2MS4yMTQsMTA3LjQyMi0xNjEuMjMyLjAyMy0yMC45MzMtMTguOTI2LTcuNDJjLTEuNDg0LDEuNTgxLTIuODYsMy4yODQtNC4wODcsNS4xMjRMNjAuNjM2LDIzNC4wNDRjLTguODQ4LDEzLjI3My04Ljg0OCwzMC40MjUsMCw0My42OTRsMTA4LjMyNiwxNjIuNTA4YzEuMjQ4LDEuODcxLDIuNjQzLDMuNjAzLDQuMTQ1LDUuMjEsMCwuMDAxLjAwMi4wMDIuMDAzLjAwM2wxOC44NjUtNi45NTctLjAzNS0yMS4yODdoLS4wMDFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjk5LjQ0NSwyNTZsLTEwNy41MDUsMTYxLjIxNGgwbC0xOC44MywyOC4yNDVjNy40MjUsNy45MzksMTcuNzIsMTIuNTQxLDI4LjYxOSwxMi41NDFoMS41MDlsMjEuMzM0LTMyLDk0LjEzOS0xNDEuMTAzLTMuMTczLTIzLjk0NC0xNi4wOTMtNC45NTNaIiBmaWxsPSIjMzRhODUzIi8+CiAgICA8cGF0aCBkPSJNNDUxLjM2NCwyMzQuMDQ1bC0xMDguMzI2LTE2Mi41MDhjLTcuMzIyLTEwLjk4MS0xOS41Ny0xNy41MzctMzIuNzY3LTE3LjUzN2gtMTA4LjU0M2MtMTAuOTczLDAtMjEuMjc5LDQuNTQ0LTI4LjY1NCwxMi4zODVsMTguODk5LDI4LjM0OS0uMDIzLjAzNGgwbC4wMTItLjAxOSwxMDcuNDgxLDE2MS4yNTEsMTkuMjY2LDI4Ljg5Nyw0LjY0NS02Ljk2MmM4Ljg1OS0xMy4yOSw4Ljg1OS0zMC40NjYsMC00My43NTVsLTk4Ljc2Ny0xNDguMTgxaDg5LjYzMmwxMTMuMTc3LDE2OS45MTguMDk0LS4wNzgsMTkuMjM2LDI4Ljg1NCw0LjYzNi02Ljk1NGM4Ljg0OS0xMy4yNzEsOC44NDktMzAuNDIyLjAwMS00My42OTRoMFoiIGZpbGw9IiNlYTQzMzUiLz4KICA8L2c+Cjwvc3ZnPg==" alt="Hyperdisk">
+                <div class="ga-node-title">Hyperdisk · 4 TB</div>
+              </div>
+              <div class="ga-scalable" onclick="gm('vm')" style="cursor:pointer;">
+                ＋ Additional VMs can be provisioned<br>with the same Terraform config
+              </div>
+            </div>
+          </div>
+
+          <!-- Cloud Run -->
+          <div class="ga-section ga-sec-cr">
+            <div class="ga-region-lbl lbl-cr">Cloud Run</div>
+            <div class="ga-col">
+              <div class="ga-node" onclick="gm('cr')">
+                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4=" alt="Cloud Run">
+                <div class="ga-node-title">Cloud Run Job</div>
+              </div>
+              <div class="ga-scalable" onclick="gm('cr')" style="cursor:pointer;margin-top:4px;">
+                ＋ Multiple jobs run in parallel<br>triggered by Cloud Scheduler
+              </div>
+                <div style="margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:9px;color:#7c3aed;font-weight:700;text-align:center;letter-spacing:.04em;">RUNTIME DEPENDENCIES</div>
+                <div style="display:flex;gap:6px;justify-content:center;">
+                  <div class="ga-node" onclick="gm('ar')" style="flex:1;min-width:0;">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGJhc2VQcm9maWxlPSJ0aW55IiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIKCSB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiBvdmVyZmxvdz0idmlzaWJsZSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnID4KCTxyZWN0IHk9IjAiIGZpbGw9Im5vbmUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIvPgoJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNUM4NURFIiBwb2ludHM9IjYsMi40IDAuOCw1LjQgMC44LDE5LjEgNiwyMi4xIDYsMTkuNSAzLDE3LjggMyw2LjcgNiw1IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIwLjgsOCAwLjgsMTYuNSAzLDE3LjggMyw2LjcgCSIvPgoJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjMzM2N0Q2IiBwb2ludHM9IjAuOCw4IDMsNy41IDMsNi43IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzVDODVERSIgcG9pbnRzPSIxOCwyLjQgMTgsNSAyMSw2LjcgMjEsMTcuOCAxOCwxOS41IDE4LDIyLjEgMjMuMiwxOS4xIDIzLjIsNS40IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIyMSwxNy44IDIzLjIsMTYuNSAyMy4yLDggMjEsNi43IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIyMSw3LjUgMjMuMiw4IDIxLDYuNyAJIi8+Cgk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzY3RDYiIHBvaW50cz0iMjEsMTcuMSAyMSwxNy44IDIzLjIsMTYuNSAJIi8+Cgk8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2Ljg2MDAwMCwgNi41MDAwMDApIj4KCQk8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0LjU0MDAwMCwgMC4wMDAwMDApIj4KCQkJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNUM4NURFIiBwb2ludHM9IjAuNiwtMSAtMi40LDAuNiAwLjYsMi4yIDMuNiwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLDUuOSAzLjksNC4zIDMuOSwxLjIgMSwyLjggCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIwLjMsMi44IC0yLjcsMS4yIC0yLjcsNC4zIDAuMyw1LjkgCQkJIi8+CgkJPC9nPgoJCTxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAuMDAwMDAwLCA3Ljk3NjE5MCkiPgoJCQk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiM1Qzg1REUiIHBvaW50cz0iMS43LC0zLjEgLTEuMiwtMS41IDEuNywwLjEgNC41LC0xLjUgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLjksMy44IDQuOCwyLjIgNC44LC0xIDEuOSwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLjQsMC42IC0xLjUsLTEgLTEuNSwyLjIgMS40LDMuOCAJCQkiLz4KCQk8L2c+CgkJPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOS4zNjAwMDAsIDcuOTc2MTkwKSI+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzVDODVERSIgcG9pbnRzPSItMC43LC0zLjEgLTMuNiwtMS41IC0wLjcsMC4xIDIuMiwtMS41IAkJCSIvPgoJCQk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzY3RDYiIHBvaW50cz0iLTAuNCwzLjggMi41LDIuMiAyLjUsLTEgLTAuNCwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSItMSwwLjYgLTMuOSwtMSAtMy45LDIuMiAtMSwzLjggCQkJIi8+CgkJPC9nPgoJPC9nPgo8L2c+Cjwvc3ZnPgo=" alt="AR" style="width:30px;height:30px;">
+                    <div class="ga-node-title" style="font-size:10px;">Artifact<br>Registry</div>
+                  </div>
+                  <div class="ga-node" onclick="gm('cs')" style="flex:1;min-width:0;">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM2NjlkZjY7fS5jbHMtMntmaWxsOiM0Mjg1ZjQ7fS5jbHMtM3tmaWxsOm5vbmU7fS5jbHMtNHtmaWxsOiNhZWNiZmE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfU2NoZWR1bGVyX0NvbG9yPC90aXRsZT48ZyBkYXRhLW5hbWU9IlByb2R1Y3QgSWNvbnMiPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTIwLDIxYTEsMSwwLDAsMS0uNy0uMjlsLTItMmExLDEsMCwwLDEsMS40MS0xLjQxbDIsMmExLDEsMCwwLDEsMCwxLjQxQTEsMSwwLDAsMSwyMCwyMVoiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00LDIxYTEsMSwwLDAsMS0uNy0xLjcxbDItMmExLDEsMCwwLDEsMS40MiwwLDEsMSwwLDAsMSwwLDEuNDFsLTIsMkExLDEsMCwwLDEsNCwyMVoiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik01LjQ3LDE3LjEzLDQuMjUsMTguMzVhMTEuMTMsMTEuMTMsMCwwLDAsMS40MiwxLjQxbDEuMjItMS4yMloiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0xOS43MywxOC4zMWwtMS0xYTEuMTksMS4xOSwwLDAsMC0uMjMtLjE2bC0xLjM0LDEuMzRhMS4xOSwxLjE5LDAsMCwwLC4xNi4yM2wxLDFBMTEuMTMsMTEuMTMsMCwwLDAsMTkuNzMsMTguMzFaIi8+PGcgZGF0YS1uYW1lPSJjb2xvcmVkLTMyL3NjaGVkdWxlciI+PHJlY3QgY2xhc3M9ImNscy0zIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiLz48ZyA+PGcgPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTEyLDIxYTksOSwwLDEsMSw5LTlBOSw5LDAsMCwxLDEyLDIxWm0wLTJhNyw3LDAsMSwwLTctN0E3LDcsMCwwLDAsMTIsMTlaIi8+PHBhdGggaWQ9Ik92YWwiIGNsYXNzPSJjbHMtMiIgZD0iTTEyLDE3YTUsNSwwLDAsMCw1LTUsNSw1LDAsMCwwLTUtNXY1TDcuOTIsMTQuOTFBNSw1LDAsMCwwLDEyLDE3WiIvPjwvZz48L2c+PC9nPjxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTQsNi4wN2ExLDEsMCwwLDEtLjcxLTEuNzFsMi0yYTEsMSwwLDAsMSwxLjQyLDAsMSwxLDAsMCwxLDAsMS40MWwtMiwyQTEsMSwwLDAsMSw0LDYuMDdaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNMjAsNi4wN2ExLDEsMCwwLDEtLjcxLS4zbC0yLTJhMSwxLDAsMCwxLDAtMS40MSwxLDEsMCwwLDEsMS40MiwwbDIsMkExLDEsMCwwLDEsMjAsNi4wN1oiLz48L2c+PC9zdmc+" alt="CS" style="width:30px;height:30px;">
+                    <div class="ga-node-title" style="font-size:10px;">Cloud<br>Scheduler</div>
+                  </div>
+                  <div class="ga-node" onclick="gm('sm')" style="flex:1;min-width:0;">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8ZyBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyLjAwMDAwMCwgNi4wMDAwMDApIiBmaWxsPSIjNDI4NUY0IiBmaWxsLXJ1bGU9Im5vbnplcm8iPgogICAgICAgICAgICA8cGF0aCBkPSJNMjAsOS40MTQ2OTEyNWUtMTQgTDIwLDExLjg4Njc5MjUgTDE2LjAzNzczNTgsMTEuODg2NzkyNSBDMTUuOTMzNTMxMiwxMS44ODY3OTI1IDE1Ljg0OTA1NjYsMTEuODAyMzE3OSAxNS44NDkwNTY2LDExLjY5ODExMzIgTDE1Ljg0OTA1NjYsMTAuNTY2MDM3NyBDMTUuODQ5MDU2NiwxMC40NjE4MzMxIDE1LjkzMzUzMTIsMTAuMzc3MzU4NSAxNi4wMzc3MzU4LDEwLjM3NzM1ODUgTDE4LjQ5MDA1NjYsMTAuMzc3IEwxOC40OTAwNTY2LDEuNTA5IEwxNi4wMzc3MzU4LDEuNTA5NDMzOTYgQzE1LjkzMzUzMTIsMS41MDk0MzM5NiAxNS44NDkwNTY2LDEuNDI0OTU5MzkgMTUuODQ5MDU2NiwxLjMyMDc1NDcyIEwxNS44NDkwNTY2LDAuMTg4Njc5MjQ1IEMxNS44NDkwNTY2LDAuMDg0NDc0NTc1NSAxNS45MzM1MzEyLDkuNDExMDU0MzRlLTE0IDE2LjAzNzczNTgsOS40MTQ2OTEyNWUtMTQgTDIwLDkuNDE0NjkxMjVlLTE0IFogTTQuMzA5MTAxLDkuNDE0NjkxMjVlLTE0IEM0LjQxMzMwNTY3LDkuMzg3Nzg2OWUtMTQgNC40OTc3ODAyNCwwLjA4NDQ3NDU3NTUgNC40OTc3ODAyNCwwLjE4ODY3OTI0NSBMNC40OTc3ODAyNCwxLjMyMDc1NDcyIEM0LjQ5Nzc4MDI0LDEuNDI0OTU5MzkgNC40MTMzMDU2NywxLjUwOTQzMzk2IDQuMzA5MTAxLDEuNTA5NDMzOTYgTDEuNTA5LDEuNTA5IEwxLjUwOSwxMC4zNzcgTDQuMjkyNDUyODMsMTAuMzc3MzU4NSBDNC4zOTY2NTc1LDEwLjM3NzM1ODUgNC40ODExMzIwOCwxMC40NjE4MzMxIDQuNDgxMTMyMDgsMTAuNTY2MDM3NyBMNC40ODExMzIwOCwxMS42OTgxMTMyIEM0LjQ4MTEzMjA4LDExLjgwMjMxNzkgNC4zOTY2NTc1LDExLjg4Njc5MjUgNC4yOTI0NTI4MywxMS44ODY3OTI1IEwyLjE0MDUwOTk5ZS0xMywxMS44ODY3OTI1IEwyLjE0MDUwOTk5ZS0xMyw5LjQxNDY5MTI1ZS0xNCBMNC4zMDkxMDEsOS40MTQ2OTEyNWUtMTQgWiBNMTUuNDI3MTA5OCwzLjg2NzkyNDUzIEwxNS40MjcxMDk4LDUuMzI0MDU2NiBMMTUuNDg3OTMwNSw1LjM0ODUyOTQxIEwxNi44MzgxNDk0LDQuODcxMzA5NjYgTDE3LjExNzkyNDUsNS42OTExNDg3MiBMMTUuNzU1NTQxNCw2LjE1NjEzMjA4IEwxNS43MTkwNDksNi4yNTQwMjMzMSBMMTYuNjU1Njg3NCw3LjUxNDM3MjkyIEwxNS45NTAxNjc2LDguMDI4MzAxODkgTDE1LjAzNzg1NzUsNi43Njc5NTIyOCBMMTQuOTUyNzA4NSw2Ljc2Nzk1MjI4IEwxNC4wNDAzOTg0LDguMDI4MzAxODkgTDEzLjMzNDg3ODYsNy41MTQzNzI5MiBMMTQuMjU5MzUyOSw2LjI1NDAyMzMxIEwxNC4yMzUwMjQ2LDYuMTU2MTMyMDggTDEyLjg3MjY0MTUsNS42OTExNDg3MiBMMTMuMTUyNDE2Niw0Ljg3MTMwOTY2IEwxNC40OTA0NzE0LDUuMzQ4NTI5NDEgTDE0LjU2MzQ1NjIsNS4zMjQwNTY2IEwxNC41NjM0NTYyLDMuODY3OTI0NTMgTDE1LjQyNzEwOTgsMy44Njc5MjQ1MyBaIE01LjE5NTk3NzczLDMuODY3OTI0NTMgTDUuMTk1OTc3NzMsNS4zMDk2Mzk0NSBMNS4yNTY3OTg0LDUuMzMzODY5OTYgTDYuNjA3MDE3MzUsNC44NjEzNzUxNSBMNi44ODY3OTI0NSw1LjY3MzA5NyBMNS41MjQ0MDkzNiw2LjEzMzQ3NjU2IEw1LjQ4NzkxNjk2LDYuMjMwMzk4NTcgTDYuNDI0NTU1MzMsNy40NzgyNjk0NyBMNS43MTkwMzU1Miw3Ljk4NzExMDAzIEw0LjgwNjcyNTQxLDYuNzM5MjM5MTMgTDQuNzIxNTc2NDcsNi43MzkyMzkxMyBMMy44MDkyNjYzNyw3Ljk4NzExMDAzIEwzLjEwMzc0NjU1LDcuNDc4MjY5NDcgTDQuMDI4MjIwNzksNi4yMzAzOTg1NyBMNC4wMDM4OTI1Miw2LjEzMzQ3NjU2IEwyLjY0MTUwOTQzLDUuNjczMDk3IEwyLjkyMTI4NDUzLDQuODYxMzc1MTUgTDQuMjU5MzM5MzUsNS4zMzM4Njk5NiBMNC4zMzIzMjQxNiw1LjMwOTYzOTQ1IEw0LjMzMjMyNDE2LDMuODY3OTI0NTMgTDUuMTk1OTc3NzMsMy44Njc5MjQ1MyBaIE0xMC4yOTAzMTczLDMuODY3OTI0NTMgTDEwLjI5MDMxNzMsNS4zMDk2Mzk0NSBMMTAuMzUxMTM4LDUuMzMzODY5OTYgTDExLjcwMTM1Nyw0Ljg2MTM3NTE1IEwxMS45ODExMzIxLDUuNjczMDk3IEwxMC42MTg3NDksNi4xMzM0NzY1NiBMMTAuNTgyMjU2Niw2LjIzMDM5ODU3IEwxMS41MTg4OTUsNy40NzgyNjk0NyBMMTAuODEzMzc1MSw3Ljk4NzExMDAzIEw5LjkwMTA2NTA0LDYuNzM5MjM5MTMgTDkuODE1OTE2MDksNi43MzkyMzkxMyBMOC45MDM2MDU5OSw3Ljk4NzExMDAzIEw4LjE5ODA4NjE4LDcuNDc4MjY5NDcgTDkuMTIyNTYwNDIsNi4yMzAzOTg1NyBMOS4wOTgyMzIxNSw2LjEzMzQ3NjU2IEw3LjczNTg0OTA2LDUuNjczMDk3IEw4LjAxNTYyNDE2LDQuODYxMzc1MTUgTDkuMzUzNjc4OTcsNS4zMzM4Njk5NiBMOS40MjY2NjM3OCw1LjMwOTYzOTQ1IEw5LjQyNjY2Mzc4LDMuODY3OTI0NTMgTDEwLjI5MDMxNzMsMy44Njc5MjQ1MyBaIiA+PC9wYXRoPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+" alt="SM" style="width:30px;height:30px;">
+                    <div class="ga-node-title" style="font-size:10px;">Secret<br>Manager</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sections -->
+      </div><!-- /zone -->
+
+      <!-- GCS Storage row -->
+      <div class="ga-storage-box">
+        <div class="ga-region-lbl lbl-store">Cloud Storage</div>
+        <div class="ga-storage-arrow-lane"></div>
+        <div class="ga-storage-row">
+          <div class="ga-node ga-prod-bucket" onclick="gm('gprod')" style="flex:1;">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+" alt="GCS">
+            <div class="ga-node-title">GCS Production Bucket</div>
+          </div>
+          <div class="ga-node" onclick="gm('gwork')" style="flex:1;">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+" alt="GCS">
+            <div class="ga-node-title">GCS Work Bucket</div>
+          </div>
+        </div>
+        <div class="ga-storage-subtitle">
+          Production bucket is mounted read-only by ERDDAP through the persistent rclone mount; work bucket is used for staging and processing outputs.
+        </div>
+      </div>
+
+        </div><!-- /ga-vpc-main -->
+      </div><!-- /ga-vpc-layout -->
+    </div><!-- /vpc -->
+
+  </div><!-- /frame -->
+
+  <!-- ── TERRAFORM FOOTER ── -->
+  <div class="ga-tf-banner" onclick="gm('tf')">
+    <div class="ga-tf-badge">Terraform</div>
+    <div class="ga-tf-text">
+      <strong>All infrastructure is defined and managed as code.</strong>
+      Four files — <code>main.tf</code>, <code>instance.tf</code>, <code>bucket.tf</code>, <code>load_balancer.tf</code> — replace manual GCP Console setup. State is stored centrally in GCS, enabling team collaboration without drift.
+      <span style="color:#a16207;">Click for details ›</span>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:#94a3b8;margin:.5rem 0 0 2px;">
+    ⓘ Click any component to learn more.
+  </p>
+</div>
+
+<!-- Modal -->
+<div class="ga-overlay" id="ga-overlay" onclick="gc()"></div>
+<div class="ga-modal" id="ga-modal">
+  <div class="ga-mhdr">
+    <div>
+      <div class="ga-mtitle" id="ga-t"></div>
+      <div class="ga-mtag" id="ga-s"></div>
+    </div>
+    <button class="ga-mclose" onclick="gc()">×</button>
+  </div>
+  <div class="ga-mbody" id="ga-b"></div>
+  <div class="ga-mnote" id="ga-n" style="display:none;"></div>
+</div>
+
+<script>
+const D={
+  lb:{t:"Load Balancer & Private Service Connect",s:"GCP · Cloud Load Balancing",
+    b:"Three required components: the load balancer (forwarding rules, DoD certificates, proxy subnets, firewall rules), a PSC NAT subnet (one per service attachment), and a PSC Service Attachment (filed via SCR, created by the network team). One load balancer is shared across all apps in the project — PSC is always one-to-one per service. All traffic appears to originate from the PSC NAT subnet, so any IP restrictions must be communicated to the network team in the SCR.",
+    n:"Google's CA cannot issue certificates for NOAA domains. DoD certificates must be requested separately and uploaded manually via Certificate Manager in the GCP Console — this step cannot be automated through Terraform."},
+  erddap:{t:"ERDDAP VM",s:"GCP · Compute Engine",
+    b:"Dedicated solely to serving — no data processing runs here. The BIG ERDDAP at coastwatch.pfeg.noaa.gov hosts 3,112 datasets (89% gridded), has served 78,281 unique users and 1.41M requests since last restart. Machine sizing follows on-prem RAM: e.g. a 377 GB on-prem server maps to a <code>c4-highmem-48</code>. Modern C4 Intel cores substantially outperform the legacy Xeon Platinum CPUs being replaced.",
+    n:"The strict separation of serving and processing is a key architectural decision. ERDDAP is memory-bound for subsetting operations; co-locating processing jobs would contend for RAM during peak request loads."},
+  edisk:{t:"ERDDAP Hyperdisk",s:"GCP · Hyperdisk Balanced",
+    b:"Stores ERDDAP's <code>bigParentDirectory</code> — the working directory, dataset index, response cache, and request logs. Chosen over standard persistent disk for higher I/O throughput needed with large NetCDF workloads. A standard symlink (<code>/data</code>) provides a consistent path so ERDDAP configuration doesn't need to change between environments.",
+    n:null},
+  rclone:{t:"rclone mount",s:"rclone / FUSE",
+    b:"Mounts the GCS production bucket as a local filesystem path (<code>/mnt/gcs/erd</code>) inside the ERDDAP VM using a VFS layer. The mount is read-only to protect source data. Local NVMe caching (~500 GB) handles ERDDAP's range-request access pattern on NetCDF files. The mount lifecycle is managed by a systemd service that auto-starts on boot and restarts on failure.",
+    n:"GCSFuse was evaluated but rclone was chosen for better compatibility with ERDDAP's random-access read patterns on large NetCDF files."},
+  vm:{t:"Processing VM",s:"GCP · Compute Engine C4 series",
+    b:"Used for heavy, long-running, or memory-intensive processing: backfills, data reprocessing, and jobs that exceed Cloud Run's limits. Follows a standardised directory layout (<code>/home/erd/</code>) with <code>config/</code>, <code>data/</code>, <code>scripts/</code>, <code>src/</code>, and <code>templates/</code> subdirectories — enabling predictable pathing, environment reproducibility, and seamless handoff between team members.",
+    n:"The template-dataproc GitHub template encodes this structure so new VMs start from a consistent baseline. Legacy code from 2014 with hard-coded paths and machine-specific assumptions has been refactored to use config-driven logic as part of the migration."},
+  vmdisk:{t:"Processing Hyperdisk · 4 TB",s:"GCP · Hyperdisk Balanced",
+    b:"High-throughput scratch disk mounted at <code>/mnt/disks/xyz-data</code> and symlinked to <code>/data</code> for workflow consistency. Holds temporary files, intermediate composites, and large working datasets during processing. Final validated outputs are written to the GCS production bucket; in-progress work stays on the work disk or GCS work bucket.",
+    n:null},
+  cr:{t:"Cloud Run Jobs",s:"GCP · Cloud Run",
+    b:"Serverless containerised jobs used for all scheduled processing — ASCAT daily/monthly, CRW, MUR, VIIRS NetPP, LEO SST, and more. Each job pulls its image from Artifact Registry at runtime, retrieves credentials from Secret Manager, and writes outputs to GCS. Jobs scale to zero when idle and scale up on demand, so there is no idle compute cost. The cloud-run-template GitHub repo provides a standard container structure mirroring the VM layout.",
+    n:"Use Cloud Run for jobs with a clear start/end boundary. Use a Processing VM for jobs that require persistent local state, very large scratch space, or interactive development."},
+  ar:{t:"Artifact Registry",s:"GCP · Artifact Registry",
+    b:"Stores all versioned Docker images for Cloud Run Jobs. Images are built from source and pushed here; Cloud Run pulls them at runtime. Keeping images inside the project network avoids external registry dependencies and keeps everything under IAM control. The Artifact Registry is provisioned and managed via Terraform.",
+    n:null},
+  cs:{t:"Cloud Scheduler",s:"GCP · Cloud Scheduler",
+    b:"Triggers Cloud Run Jobs on cron schedules — daily processors (e.g. ASCAT, CRW, MUR, VIIRS) typically run at fixed times, while monthly processors run on the 3rd–10th of each month. Provides managed scheduling with automatic retry on failure, replacing the old on-prem crontab setup. No always-on VM is needed just to run cron.",
+    n:null},
+  sm:{t:"Secret Manager",s:"GCP · Secret Manager",
+    b:"Stores all runtime credentials outside of code, containers, and <code>datasets.xml</code>: API keys, SFTP passwords, connection strings, and tokens for external data sources (NASA, SFTP feeds, etc.). Jobs and VMs retrieve secrets at runtime using their service account. Secrets are versioned, so rotation doesn't require redeployment.",
+    n:"This was a direct response to legacy code that embedded credentials in scripts or ERDDAP config files — a pattern that made secrets visible in version control and difficult to rotate."},
+  gprod:{t:"GCS Production Bucket",s:"GCP · Cloud Storage",
+    b:"The authoritative store for ERDDAP-ready, production-validated datasets. Processing VMs and Cloud Run Jobs write final outputs here; the ERDDAP VM reads via the rclone mount. IAM permissions are applied declaratively through Terraform — no manual IAM drift across environments. Bucket names and access policies are defined in <code>bucket.tf</code>.",
+    n:null},
+  gwork:{t:"GCS Work Bucket",s:"GCP · Cloud Storage",
+    b:"Staging area for temporary files, intermediate composites, and in-progress workflow state. Keeps pre-production data cleanly separated from what ERDDAP serves. Cloud Run Jobs write temporary outputs here during processing before promoting validated results to the production bucket.",
+    n:null},
+  tf:{t:"Terraform",s:"HashiCorp Terraform",
+    b:"All infrastructure is defined as version-controlled code across four files: <code>main.tf</code> (providers, project config, remote state in GCS), <code>instance.tf</code> (ERDDAP and processing VMs), <code>bucket.tf</code> (storage + IAM), and <code>load_balancer.tf</code> (external access, SSL, health checks). This replaced manual GCP Console setup, ensuring environments are reproducible from dev to prod and changes are auditable.",
+    n:"DoD certificates are the one manual step — Certificate Manager doesn't support non-Google CAs via Terraform, so the certificate chain and private key must be uploaded through the Console."},
+  users:{t:"External End Users",s:"Public · ~78K unique users",
+    b:"Scientists, researchers, and automated systems worldwide accessing ERDDAP over HTTPS. The BIG ERDDAP has served 78,281 unique users and 1.41 million requests since last restart, with dataset content spanning sea surface temperature, ocean color, acoustic monitoring, MODIS, VIIRS, Argo floats, marine mammals, and more. All traffic enters only through the load balancer.",
+    n:null},
+  dev:{t:"Scientist / Developer",s:"Internal · SWFSC team",
+    b:"The SWFSC team migrating and maintaining ERDDAP on GCP — Jonathan Sherman, Sunny Hospital, Dale Robinson, Cara Wilson, Madi Richardson, Roy Mendelssohn, and Lynn Dewitt. They manage Terraform infrastructure, refactor legacy processing scripts (some dating to 2014), build Cloud Run containers, and develop new data workflows. Migration is driven by a NOAA NMFS mandate to move all data to GCP by end of 2026, with on-prem server support ending March 2027.",
+    n:null},
+};
+function gm(k){
+  var d=D[k]; if(!d) return;
+  document.getElementById('ga-t').innerHTML=d.t;
+  document.getElementById('ga-s').innerHTML=d.s;
+  document.getElementById('ga-b').innerHTML=d.b;
+  var n=document.getElementById('ga-n');
+  if(d.n){n.innerHTML=d.n;n.style.display='block';}
+  else{n.style.display='none';}
+  document.getElementById('ga-overlay').classList.add('on');
+  var m=document.getElementById('ga-modal');
+  m.style.display='block';
+  requestAnimationFrame(function(){m.classList.add('on');});
+}
+function gc(){
+  document.getElementById('ga-overlay').classList.remove('on');
+  var m=document.getElementById('ga-modal');
+  m.classList.remove('on');
+  setTimeout(function(){m.style.display='none';},170);
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')gc();});
+</script>
+
+</section>
+<section id="why-this-structure-works" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-structure-works">Why this structure works</h2>
+<p>This design keeps serving, processing, and storage responsibilities separate. The ERDDAP server remains focused on data access and public distribution, while workflows can evolve independently as VM-based or serverless jobs. Google Cloud Storage provides the shared data layer between systems, and Terraform keeps the infrastructure reproducible and maintainable.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // default icon
+            link.classList.add("external");
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation column-page-right">
+  <div class="nav-page nav-page-previous">
+      <a href="./gcp-templates.html" class="pagination-link" aria-label="GCP Data Processing Templates">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">GCP Data Processing Templates</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./mh1-processor.html" class="pagination-link" aria-label="MH1 / MPOC / MPIC Processor">
+        <span class="nav-page-text"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
