@@ -204,6 +204,10 @@ JAVA_INSTALL="${INSTALL_DIR}/$(basename -- "${JAVA_EXTRACTED}")"
 [[ ! -e "${JAVA_INSTALL}" ]] || die "${JAVA_INSTALL} already exists."
 run_as_root mv "${JAVA_EXTRACTED}" "${JAVA_INSTALL}"
 run_as_root chown -R root:root "${JAVA_INSTALL}"
+# Some Temurin archives preserve restrictive directory and file modes. Ensure
+# every user can traverse the JDK tree and execute the Java binaries while
+# keeping ownership and write access restricted to root.
+run_as_root chmod -R a+rX "${JAVA_INSTALL}"
 run_as_root ln -s "${JAVA_INSTALL}" "${JAVA_LINK}"
 "${JAVA_LINK}/bin/java" -version
 
@@ -238,9 +242,9 @@ printf '%s  %s\n' "${ERDDAP_CONTENT_MD5}" "${TEMP_DIR}/erddapContent.zip" | md5s
 run_as_root install -o "${TOMCAT_USER}" -g "${TOMCAT_GROUP}" -m 0640 \
     "${TEMP_DIR}/erddap.war" "${TOMCAT_INSTALL}/webapps/erddap.war"
 run_as_root unzip -q "${TEMP_DIR}/erddapContent.zip" -d "${TOMCAT_INSTALL}"
-[[ -f "${TOMCAT_INSTALL}/content/erddap/setup.xml" ]] || \
+run_as_root test -f "${TOMCAT_INSTALL}/content/erddap/setup.xml" || \
     die "erddapContent did not create content/erddap/setup.xml."
-[[ -f "${TOMCAT_INSTALL}/content/erddap/datasets.xml" ]] || \
+run_as_root test -f "${TOMCAT_INSTALL}/content/erddap/datasets.xml" || \
     die "erddapContent did not create content/erddap/datasets.xml."
 
 log "Creating ERDDAP's persistent working directory"
@@ -279,7 +283,7 @@ context_path.write_text(context, encoding="utf-8")
 
 server_path = tomcat / "conf" / "server.xml"
 server = server_path.read_text(encoding="utf-8")
-match = re.search(r'<Connector\s+port="8080"\b[^>]*?/?>', server, flags=re.DOTALL)
+match = re.search(r'<Connector\s+port=["\']8080["\'][^>]*?/?>', server, flags=re.DOTALL)
 if not match:
     raise SystemExit("Could not find Tomcat's active port 8080 connector")
 
@@ -305,6 +309,20 @@ if "org.apache.catalina.valves.ErrorReportValve" not in server:
     valve = (
         '        <Valve className="org.apache.catalina.valves.ErrorReportValve" '
         'showReport="false" showServerInfo="false" />\n'
+    )
+    server, count = re.subn(r"(\s*</Host>)", "\n" + valve + r"\1", server, count=1)
+    if count != 1:
+        raise SystemExit("Could not locate </Host> in server.xml")
+
+# TLS is normally terminated by the Google Cloud load balancer. Teach Tomcat
+# to honor the proxy headers so ERDDAP generates https:// links for styles,
+# images, forms, and dataset URLs instead of mixed-content http:// links.
+if "org.apache.catalina.valves.RemoteIpValve" not in server:
+    valve = (
+        '        <Valve className="org.apache.catalina.valves.RemoteIpValve"\n'
+        '               remoteIpHeader="X-Forwarded-For"\n'
+        '               protocolHeader="X-Forwarded-Proto"\n'
+        '               protocolHeaderHttpsValue="https" />\n'
     )
     server, count = re.subn(r"(\s*</Host>)", "\n" + valve + r"\1", server, count=1)
     if count != 1:

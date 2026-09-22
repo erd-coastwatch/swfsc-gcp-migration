@@ -2,16 +2,29 @@
 title: "ERDDAP VM Setup"
 ---
 
-This section describes the initialization and configuration of the dedicated ERDDAP serving environment after infrastructure has been deployed. The ERDDAP VM uses C4 high-memory instances (for example, `c4-highmem-16`) together with Hyperdisk Balanced storage, rclone-mounted GCS buckets for dataset access, and Tomcat-hosted ERDDAP for data distribution.
+This section describes the initialization and configuration of a dedicated ERDDAP serving environment after its infrastructure has been deployed. Size the VM and disks for the workload: a local-data ERDDAP may need a high-memory VM, a multi-terabyte cache disk, and a GCS data bucket, while a mostly remote-data ERDDAP can often use a smaller VM and disk without a dedicated bucket.
+
+The similarly named storage components have different purposes:
+
+| Component | Terraform or documentation name | Purpose |
+|---|---|---|
+| Boot disk | `YOUR_ERDDAP_BOOT_DISK_NAME` | Operating system, Java, Tomcat, ERDDAP application, and configuration |
+| Persistent data disk | `YOUR_ERDDAP_DATA_DISK_NAME` | ERDDAP working directory, logs, decompressed files, and rclone cache; survives VM rebuilds |
+| ERDDAP data bucket | `YOUR_ERDDAP_BUCKET_NAME` | Source datasets mounted read-only into the VM; optional for a remote-only catalog |
+| Processing/data bucket | `YOUR_PROCESSING_OR_DATA_BUCKET_NAME` | Inputs or outputs for processing workflows; not necessarily mounted by ERDDAP |
+| Bucket mount | `/mnt/gcs/erd` | Read-only filesystem view of the ERDDAP data bucket |
+| Persistent mount | `/mnt/disks/erddap-data` | Filesystem mount for the attached data disk |
+
+The example names are placeholders. Keep the selected resource names consistent between Terraform, rclone, `/etc/fstab`, and the commands below.
 
 ### 1. Configure the Operating System Environment
 
 #### 1.1 Configure Shared User Group Permissions
 
-Create a shared group for operational data access and add the required users:
+Create a shared group for operational data access and add the required users. `YOUR_OPERATIONAL_USERNAME` is the normal Linux account used by an operator or automation process to administer data outside Tomcat. If no separate account is required, omit that line and use only your login plus the `tomcat` service account created by the installer.
 
 ```{.bash}
-sudo groupadd cwatch                              # Create the cwatch group if it does not already exist
+getent group cwatch >/dev/null || sudo groupadd cwatch
 sudo usermod -aG cwatch $USER                     # Add your current user
 sudo usermod -aG cwatch YOUR_OPERATIONAL_USERNAME # Add the operational/service account (e.g. erd)
 newgrp cwatch                                     # Refresh group membership (or log out and back in)
@@ -39,11 +52,21 @@ sudo mount -o discard,defaults \
     /mnt/disks/erddap-data
 
 # Set permissions for the shared cwatch group
-sudo chown -R root:cwatch /mnt/disks/erddap-data
-sudo chmod -R 2775 /mnt/disks/erddap-data
+sudo chown root:cwatch /mnt/disks
+sudo chmod 2775 /mnt/disks
+sudo chown root:cwatch /mnt/disks/erddap-data
+sudo chmod 2775 /mnt/disks/erddap-data
 
 # Optional: standard symlink used by operational workflows
-sudo ln -s /mnt/disks/erddap-data /data
+sudo test -e /data || sudo ln -s /mnt/disks/erddap-data /data
+```
+
+Verify every directory in the path is traversable by `cwatch` members. Correct permissions on the mount itself are insufficient if `/mnt/disks` remains `0700 root:root`.
+
+```{.bash}
+namei -l /mnt/disks/erddap-data
+findmnt /mnt/disks/erddap-data
+df -hT /mnt/disks/erddap-data
 ```
 
 #### 1.3 Configure GCS Connectivity with Rclone {#sec-rclone}
@@ -54,6 +77,14 @@ Install rclone:
 
 ```{.bash}
 sudo curl https://rclone.org/install.sh | sudo bash
+```
+
+Permit FUSE mounts to use rclone's `--allow-other` option:
+
+```{.bash}
+if ! sudo grep -qx 'user_allow_other' /etc/fuse.conf; then
+  echo user_allow_other | sudo tee -a /etc/fuse.conf
+fi
 ```
 
 Create a shared rclone configuration:
@@ -72,7 +103,16 @@ EOF
 sudo chown -R root:cwatch /home/YOUR_OPERATIONAL_USERNAME/rclone/
 ```
 
-Create the local cache and mount directories, then create the systemd persistence service:
+Create the local cache and mount directories before starting the service:
+
+```{.bash}
+sudo mkdir -p /mnt/gcs/erd
+sudo mkdir -p /mnt/disks/erddap-data/rclone-cache
+sudo chown root:cwatch /mnt/gcs /mnt/gcs/erd
+sudo chmod 2775 /mnt/gcs /mnt/gcs/erd
+```
+
+Then create the systemd persistence service:
 
 ```{.bash}
 sudo tee /etc/systemd/system/rclone-mount.service > /dev/null <<EOF
@@ -122,6 +162,8 @@ Key rclone mount notes:
 - `--vfs-cache-mode full` enables local caching on the persistent disk.
 - `--vfs-read-ahead` improves sequential read performance for ERDDAP requests.
 - `--attr-timeout 1m` helps rclone detect when NRT files are replaced by science-quality versions in GCS.
+- `--dir-cache-time 1h` means a newly created cloud directory might not appear through the mounted filesystem for up to an hour unless the VFS directory cache is refreshed.
+- `--rc` starts rclone's localhost-only remote-control endpoint. `--rc-no-auth` is acceptable only because the endpoint remains bound to localhost and is protected by the VM.
 
 Enable and start the service:
 
@@ -135,7 +177,19 @@ Verify the mount and cache status:
 
 ```{.bash}
 ls -l /mnt/gcs/erd       # Confirm GCS bucket contents are visible
-rclone rc vfs/stats       # Monitor cache usage and read-ahead status
+rclone rc vfs/stats      # Monitor cache usage and read-ahead status
+```
+
+After adding or replacing objects directly in GCS, refresh the mounted directory cache when the files must become visible immediately:
+
+```{.bash}
+rclone rc vfs/refresh recursive=true
+```
+
+For a very large bucket, refresh only the affected directory when possible because a recursive refresh can take a long time:
+
+```{.bash}
+rclone rc vfs/refresh dir=PATH/RELATIVE/TO/BUCKET recursive=true
 ```
 
 ::: {.callout-tip}
@@ -148,7 +202,7 @@ rclone rc vfs/stats       # Monitor cache usage and read-ahead status
 
 #### 2.1 Run the SWFSC ERDDAP Installation Script
 
-The installation script installs pinned versions of Java, Tomcat, ERDDAP, and the required system dependencies. It also configures the `tomcat-erddap` systemd service and ERDDAP's persistent working directory.
+The public installation script installs pinned versions of Java, Tomcat, ERDDAP, and the required system dependencies. It also configures the `tomcat-erddap` systemd service, ERDDAP's persistent working directory, and Tomcat's reverse-proxy handling. Pinning prevents an untested upstream release from silently changing an installation; review and test the script whenever an ERDDAP version is updated.
 
 ```{.bash}
 wget -O erddap_setup.sh \
@@ -163,13 +217,43 @@ The installer enables the `tomcat-erddap` service but does not start it. This al
 
 The installer refuses to overwrite an existing Java or Tomcat installation. ERDDAP upgrades should be performed as a separate, planned operation.
 
+Review the versions that will be installed without modifying the host:
+
+```{.bash}
+./erddap_setup.sh --help
+```
+
 #### 2.2 Configure ERDDAP
 
-Review and update the ERDDAP configuration:
+Review and update the ERDDAP configuration. Follow the [official ERDDAP installation documentation](https://erddap.github.io/docs/server-admin/deploy-install) and, at minimum, verify:
+
+- `bigParentDirectory`
+- `baseUrl` and `baseHttpsUrl`
+- administrator name, institution, address, phone, and email
+- outbound email settings, or intentionally disabled email settings for staging
+- `flagKeyKey`
+- subscription and authentication settings
+- the intended `datasetsRegex` and `datasets.xml`
 
 ```{.bash}
 sudoedit /usr/local/tomcat_erddap/content/erddap/setup.xml
 sudoedit /usr/local/tomcat_erddap/content/erddap/datasets.xml
+```
+
+When ERDDAP is behind an HTTPS load balancer, both public URL values should use the externally visible hostname. This prevents mixed-content failures where an HTTPS page tries to load CSS and images over HTTP.
+
+```xml
+<baseUrl>https://YOUR_ERDDAP_HOSTNAME</baseUrl>
+<baseHttpsUrl>https://YOUR_ERDDAP_HOSTNAME</baseHttpsUrl>
+```
+
+The installer adds a Tomcat `RemoteIpValve` so Tomcat honors the load balancer's `X-Forwarded-For` and `X-Forwarded-Proto` headers:
+
+```xml
+<Valve className="org.apache.catalina.valves.RemoteIpValve"
+       remoteIpHeader="X-Forwarded-For"
+       protocolHeader="X-Forwarded-Proto"
+       protocolHeaderHttpsValue="https" />
 ```
 
 The default persistent working directory is:
@@ -190,13 +274,72 @@ sudo chmod 640 \
   /usr/local/tomcat_erddap/content/erddap/datasets.xml
 ```
 
-#### 2.3 Start and Verify ERDDAP
+Validate the XML before starting ERDDAP:
+
+```{.bash}
+sudo xmllint --noout /usr/local/tomcat_erddap/content/erddap/setup.xml
+sudo xmllint --noout /usr/local/tomcat_erddap/content/erddap/datasets.xml
+sudo xmllint --noout /usr/local/tomcat_erddap/conf/server.xml
+```
+
+### 3. Configure Load-Balancer Firewall Access
+
+A Google Cloud regional internal Application Load Balancer requires ingress to the backend port from both Google's health-check ranges and the region's proxy-only subnet. Determine the proxy-only range rather than copying a range from another project:
+
+```{.bash}
+gcloud compute networks subnets list \
+  --project=YOUR_GCP_PROJECT_ID \
+  --filter='purpose=REGIONAL_MANAGED_PROXY' \
+  --format='table(name,region,network,ipCidrRange,purpose,role)'
+```
+
+Create narrowly scoped VPC firewall rules for TCP 8080. If organizational policy allows destination ranges in VPC firewall rules, restrict these rules to the backend VM addresses.
+
+```{.bash}
+gcloud compute firewall-rules create allow-erddap-lb-health-checks \
+  --project=YOUR_GCP_PROJECT_ID \
+  --network=YOUR_NETWORK \
+  --direction=INGRESS \
+  --action=ALLOW \
+  --rules=tcp:8080 \
+  --source-ranges=130.211.0.0/22,35.191.0.0/16 \
+  --destination-ranges=YOUR_ERDDAP_BACKEND_IPS
+
+gcloud compute firewall-rules create allow-erddap-lb-proxy-ingress \
+  --project=YOUR_GCP_PROJECT_ID \
+  --network=YOUR_NETWORK \
+  --direction=INGRESS \
+  --action=ALLOW \
+  --rules=tcp:8080 \
+  --source-ranges=YOUR_PROXY_ONLY_SUBNET \
+  --destination-ranges=YOUR_ERDDAP_BACKEND_IPS
+```
+
+NOAA VM images may also enable Ubuntu's Uncomplicated Firewall (UFW). Allow the same sources locally, replacing the destination address and proxy range:
+
+```{.bash}
+sudo ufw allow proto tcp from 130.211.0.0/22 \
+  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment 'Google LB health checks'
+
+sudo ufw allow proto tcp from 35.191.0.0/16 \
+  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment 'Google LB health checks'
+
+sudo ufw allow proto tcp from YOUR_PROXY_ONLY_SUBNET \
+  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment 'Regional LB proxy subnet'
+
+sudo ufw status numbered
+```
+
+Do not expose port 8080 to the public internet. The load balancer terminates HTTPS and connects to Tomcat on the private backend address.
+
+### 4. Start and Verify ERDDAP
 
 ```{.bash}
 sudo systemctl start tomcat-erddap
 sudo systemctl --no-pager --full status tomcat-erddap
 
-curl -I http://127.0.0.1:8080/erddap/index.html
+curl -fsSI http://127.0.0.1:8080/erddap/status.html
+curl -fsSI http://YOUR_ERDDAP_INTERNAL_IP:8080/erddap/status.html
 ```
 
 Follow the service log during the initial dataset load:
@@ -204,6 +347,35 @@ Follow the service log during the initial dataset load:
 ```{.bash}
 sudo journalctl -u tomcat-erddap -f
 ```
+
+Follow dataset construction in ERDDAP's application log:
+
+```{.bash}
+log=/mnt/disks/erddap-data/erddap/logs/log.txt
+
+sudo tail -F "$log" |
+grep --line-buffered -E \
+  'constructing EDD|constructor finished|LoadDatasets.run finished|failed to load|ERROR:|Exception'
+```
+
+From Cloud Shell, confirm that the load balancer considers the backend healthy:
+
+```{.bash}
+gcloud compute backend-services get-health YOUR_BACKEND_SERVICE \
+  --project=YOUR_GCP_PROJECT_ID \
+  --region=YOUR_GCP_REGION
+```
+
+Confirm the external route and generated HTTPS assets:
+
+```{.bash}
+curl -kfsSI https://YOUR_ERDDAP_HOSTNAME/erddap/status.html
+
+curl -kfsS https://YOUR_ERDDAP_HOSTNAME/erddap/index.html |
+grep -oE '<link[^>]*erddap2.css[^>]*>'
+```
+
+The backend must report `HEALTHY`, the status request must return HTTP 200, and the CSS URL must begin with `https://YOUR_ERDDAP_HOSTNAME/`. Use `-k` only for a staging certificate that is not yet trusted; production clients should validate the complete certificate chain.
 
 Stop or restart ERDDAP with:
 
