@@ -1121,7 +1121,7 @@ Tip
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>Storage capacity:</strong> The 2 TB cache is a managed ceiling — rclone will automatically purge the oldest data if it hits this limit, ensuring the disk never fills up.</p>
+<p><strong>Storage capacity:</strong> The configured cache size is a managed ceiling. Rclone automatically purges the oldest cached data when it reaches this limit. Set the limit below the persistent disk’s available capacity so ERDDAP working files and logs retain adequate space.</p>
 <p><strong>NRT updates:</strong> By checking attributes once per minute, the system will automatically fetch the updated science-quality version of a file even if the filename has not changed.</p>
 </div>
 </div>
