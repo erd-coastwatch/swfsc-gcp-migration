@@ -905,16 +905,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This section covers the Terraform-managed infrastructure layer: virtual machines, storage buckets, networking, service accounts, IAM permissions, and supporting cloud services.</p>
 <section id="access-the-infrastructure-configuration" class="level3">
 <h3 class="anchored" data-anchor-id="access-the-infrastructure-configuration">1. Access the Infrastructure Configuration</h3>
-<p>Before creating or modifying any VM environment, access the Terraform infrastructure repository used to manage the deployment configuration. In this setup, the Terraform configuration is stored in a centralized source control repository managed within Google Cloud.</p>
+<p>Before creating or modifying any VM environment, access the source repository that contains the Terraform configuration. The original SWFSC deployment used Google Cloud Source Repositories, but Cloud Source Repositories is unavailable to new customers. Terraform source files can instead be stored in GitHub, Google Secure Source Manager, or another controlled Git repository.</p>
+<p>The source repository and Terraform state backend are separate:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Purpose</th>
+<th>Example location</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Terraform source</td>
+<td>Reviewable <code>.tf</code> files and Git history</td>
+<td>GitHub, Secure Source Manager, or an existing Cloud Source Repository</td>
+</tr>
+<tr class="even">
+<td>Terraform state</td>
+<td>Records the cloud resources managed by Terraform</td>
+<td>A versioned, access-controlled GCS bucket configured in <code>backend "gcs"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Terraform does not require its source files to live in Google Cloud. The files only need to be available on the workstation, Cloud Shell session, or CI runner where Terraform executes.</p>
 <ol type="1">
 <li>Log into the <a href="https://console.cloud.google.com">Google Cloud Console</a>.</li>
 <li>Start Cloud Shell by clicking the terminal icon (<code>&gt;_</code>) in the top-right corner.</li>
-<li>Clone the infrastructure repository:</li>
+<li>Clone the infrastructure repository using the URL for the selected Git provider. For an organization that already has access to Cloud Source Repositories:</li>
 </ol>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://source.developers.google.com/p/YOUR_GCP_PROJECT_ID/r/YOUR_TERRAFORM_REPO</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace with the appropriate infrastructure repository for your environment</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> YOUR_TERRAFORM_REPO</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The repository contains the Terraform configuration files used to define VM infrastructure, storage resources, networking, and related cloud resources.</p>
+<p>For GitHub or Secure Source Manager, replace the clone URL above with the repository’s HTTPS or SSH clone URL. Do not copy the <code>.terraform/</code> working directory or local state files between systems.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Using this configuration outside the SWFSC GCP project
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The Terraform examples in this guide are templates, not a portable deployment that can be applied unchanged. Users deploying into another GCP project must provide their own:</p>
+<ul>
+<li>GCP project, region, and zone</li>
+<li>Terraform state bucket</li>
+<li>service accounts and IAM permissions</li>
+<li>VPC network and subnet</li>
+<li>approved boot image or existing snapshot</li>
+<li>snapshot policy</li>
+<li>bucket and disk names</li>
+<li>NOAA-required labels and organization-policy settings</li>
+</ul>
+<p>Do not initialize Terraform against the SWFSC state bucket or apply the configuration using SWFSC project values. Replace the project-specific values first, then run <code>terraform init</code>, <code>terraform validate</code>, and <code>terraform plan</code> in a separate state backend.</p>
+</div>
+</div>
 </section>
 <section id="review-and-deploy-infrastructure-with-terraform" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-deploy-infrastructure-with-terraform">2. Review and Deploy Infrastructure with Terraform</h3>
@@ -1069,20 +1122,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Key configuration notes:</p>
 <ul>
-<li><code>c4-highmem-*</code> instances are recommended for ERDDAP workloads — ERDDAP benefits from additional memory for dataset caching and large NetCDF access.</li>
+<li>Keep the <code>metadata</code> block on every VM resource. NOAA organization policies can reject a deployment when <code>block-project-ssh-keys</code> or <code>enable-osconfig</code> is omitted.</li>
+<li><code>c4-highmem-*</code> instances are recommended for data-heavy ERDDAP workloads because ERDDAP benefits from additional memory for dataset caching and large NetCDF access. A mostly remote-data catalog can start with a smaller instance and disk, then be resized after monitoring actual demand.</li>
 <li><code>hyperdisk-balanced</code> storage is used for high-throughput NetCDF access and rclone VFS caching.</li>
 <li>GVNIC networking is required for C4-series instances.</li>
 <li>The attached data disk is separated from the boot disk to simplify upgrades, rebuilds, and recovery.</li>
 <li>Snapshot policies are recommended for automated backup and recovery.</li>
 </ul>
+<section id="boot-image-versus-existing-snapshot" class="level4">
+<h4 class="anchored" data-anchor-id="boot-image-versus-existing-snapshot">Boot Image Versus Existing Snapshot</h4>
+<p>The <code>initialize_params</code> block must reference a resource that already exists. For a new installation, use an approved image family as shown above:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>initialize_params {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  image <span class="op">=</span> <span class="st">"projects/YOUR_TRUSTED_IMAGE_PROJECT/global/images/family/YOUR_IMAGE_FAMILY"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  size  <span class="op">=</span> <span class="st">"100"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span>  <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <code>snapshot</code> only when restoring or cloning from a snapshot that has already been created:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>initialize_params {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  snapshot <span class="op">=</span> <span class="st">"projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  size     <span class="op">=</span> <span class="st">"360"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span>     <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Terraform does not create a missing snapshot merely because its name appears in <code>initialize_params</code>. A <code>404 notFound</code> error means the snapshot reference is wrong or the prerequisite snapshot has not been created. Do not ignore that error; either create/import the snapshot first or switch the VM definition to an approved image.</p>
+</section>
 </section>
 <section id="deploy-infrastructure" class="level3">
 <h3 class="anchored" data-anchor-id="deploy-infrastructure">3. Deploy Infrastructure</h3>
+<p>Initialize the working directory and validate the configuration before planning:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> init</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> fmt <span class="at">-check</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> validate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>After reviewing and editing the Terraform configuration, preview the proposed changes:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> plan    <span class="co"># Review resources that will be created, modified, or destroyed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> plan    <span class="co"># Review resources that will be created, modified, or destroyed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Carefully review the output before applying, especially in existing environments where resources may already be in use. Once the plan looks correct, apply:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> apply   <span class="co"># Create or update VMs, disks, buckets, IAM permissions, and related resources</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>In some environments, <code>terraform apply</code> may need to be run more than once if dependent resources are still initializing.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> apply   <span class="co"># Create or update VMs, disks, buckets, IAM permissions, and related resources</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If an apply fails, correct the missing prerequisite, permission, quota, or configuration error before running it again. Do not treat a partially created VM as a successful deployment; review the next plan to confirm Terraform’s state matches the intended infrastructure.</p>
 <hr>
 <hr>
 

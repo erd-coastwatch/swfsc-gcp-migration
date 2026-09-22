@@ -876,6 +876,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#configure-the-operating-system-environment" id="toc-configure-the-operating-system-environment" class="nav-link active" data-scroll-target="#configure-the-operating-system-environment">1. Configure the Operating System Environment</a></li>
   <li><a href="#install-and-configure-erddap" id="toc-install-and-configure-erddap" class="nav-link" data-scroll-target="#install-and-configure-erddap">2. Install and Configure ERDDAP</a></li>
+  <li><a href="#configure-load-balancer-firewall-access" id="toc-configure-load-balancer-firewall-access" class="nav-link" data-scroll-target="#configure-load-balancer-firewall-access">3. Configure Load-Balancer Firewall Access</a></li>
+  <li><a href="#start-and-verify-erddap" id="toc-start-and-verify-erddap" class="nav-link" data-scroll-target="#start-and-verify-erddap">4. Start and Verify ERDDAP</a></li>
   </ul>
 </nav>
     </div>
@@ -901,13 +903,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This section describes the initialization and configuration of the dedicated ERDDAP serving environment after infrastructure has been deployed. The ERDDAP VM uses C4 high-memory instances (for example, <code>c4-highmem-16</code>) together with Hyperdisk Balanced storage, rclone-mounted GCS buckets for dataset access, and Tomcat-hosted ERDDAP for data distribution.</p>
+<p>This section describes the initialization and configuration of a dedicated ERDDAP serving environment after its infrastructure has been deployed. Size the VM and disks for the workload: a local-data ERDDAP may need a high-memory VM, a multi-terabyte cache disk, and a GCS data bucket, while a mostly remote-data ERDDAP can often use a smaller VM and disk without a dedicated bucket.</p>
+<p>The similarly named storage components have different purposes:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Terraform or documentation name</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Boot disk</td>
+<td><code>YOUR_ERDDAP_BOOT_DISK_NAME</code></td>
+<td>Operating system, Java, Tomcat, ERDDAP application, and configuration</td>
+</tr>
+<tr class="even">
+<td>Persistent data disk</td>
+<td><code>YOUR_ERDDAP_DATA_DISK_NAME</code></td>
+<td>ERDDAP working directory, logs, decompressed files, and rclone cache; survives VM rebuilds</td>
+</tr>
+<tr class="odd">
+<td>ERDDAP data bucket</td>
+<td><code>YOUR_ERDDAP_BUCKET_NAME</code></td>
+<td>Source datasets mounted read-only into the VM; optional for a remote-only catalog</td>
+</tr>
+<tr class="even">
+<td>Processing/data bucket</td>
+<td><code>YOUR_PROCESSING_OR_DATA_BUCKET_NAME</code></td>
+<td>Inputs or outputs for processing workflows; not necessarily mounted by ERDDAP</td>
+</tr>
+<tr class="odd">
+<td>Bucket mount</td>
+<td><code>/mnt/gcs/erd</code></td>
+<td>Read-only filesystem view of the ERDDAP data bucket</td>
+</tr>
+<tr class="even">
+<td>Persistent mount</td>
+<td><code>/mnt/disks/erddap-data</code></td>
+<td>Filesystem mount for the attached data disk</td>
+</tr>
+</tbody>
+</table>
+<p>The example names are placeholders. Keep the selected resource names consistent between Terraform, rclone, <code>/etc/fstab</code>, and the commands below.</p>
 <section id="configure-the-operating-system-environment" class="level3">
 <h3 class="anchored" data-anchor-id="configure-the-operating-system-environment">1. Configure the Operating System Environment</h3>
 <section id="configure-shared-user-group-permissions" class="level4">
 <h4 class="anchored" data-anchor-id="configure-shared-user-group-permissions">1.1 Configure Shared User Group Permissions</h4>
-<p>Create a shared group for operational data access and add the required users:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> groupadd cwatch                              <span class="co"># Create the cwatch group if it does not already exist</span></span>
+<p>Create a shared group for operational data access and add the required users. <code>YOUR_OPERATIONAL_USERNAME</code> is the normal Linux account used by an operator or automation process to administer data outside Tomcat. If no separate account is required, omit that line and use only your login plus the <code>tomcat</code> service account created by the installer.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getent</span> group cwatch <span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">sudo</span> groupadd cwatch</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> cwatch <span class="va">$USER</span>                     <span class="co"># Add your current user</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> cwatch YOUR_OPERATIONAL_USERNAME <span class="co"># Add the operational/service account (e.g. erd)</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">newgrp</span> cwatch                                     <span class="co"># Refresh group membership (or log out and back in)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -931,84 +981,136 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    /dev/disk/by-id/google-erddap-data <span class="dt">\</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    /mnt/disks/erddap-data</span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Set permissions for the shared cwatch group</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> root:cwatch /mnt/disks/erddap-data</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod <span class="at">-R</span> 2775 /mnt/disks/erddap-data</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: standard symlink used by operational workflows</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /mnt/disks/erddap-data /data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Make the mount persistent across VM reboots</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="va">disk_uuid</span><span class="op">=</span><span class="va">$(</span><span class="fu">sudo</span> blkid <span class="at">-s</span> UUID <span class="at">-o</span> value <span class="dt">\</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    /dev/disk/by-id/google-erddap-data<span class="va">)</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-n</span> <span class="st">"</span><span class="va">$disk_uuid</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"Unable to determine the data-disk UUID"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">exit</span> 1</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp <span class="at">-a</span> /etc/fstab <span class="st">"/etc/fstab.before-erddap-</span><span class="va">$(</span><span class="fu">date</span> +%Y%m%d-%H%M%S<span class="va">)</span><span class="st">"</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ot">! </span><span class="fu">grep</span> <span class="at">-qE</span> <span class="st">"^[[:space:]]*UUID=</span><span class="va">${disk_uuid}</span><span class="st">[[:space:]]"</span> /etc/fstab<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"UUID=</span><span class="va">${disk_uuid}</span><span class="st"> /mnt/disks/erddap-data ext4 defaults,discard,nofail 0 2"</span> <span class="kw">|</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/fstab</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Set permissions for the shared cwatch group</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown root:cwatch /mnt/disks</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 2775 /mnt/disks</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown root:cwatch /mnt/disks/erddap-data</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 2775 /mnt/disks/erddap-data</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: standard symlink used by operational workflows</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> test <span class="at">-e</span> /data <span class="kw">||</span> <span class="fu">sudo</span> ln <span class="at">-s</span> /mnt/disks/erddap-data /data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verify every directory in the path is traversable by <code>cwatch</code> members. Correct permissions on the mount itself are insufficient if <code>/mnt/disks</code> remains <code>0700 root:root</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">namei</span> <span class="at">-l</span> /mnt/disks/erddap-data</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> /mnt/disks/erddap-data</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-hT</span> /mnt/disks/erddap-data</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate the fstab entry before rebooting</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/disks/erddap-data</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-a</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> /mnt/disks/erddap-data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="sec-rclone" class="level4">
 <h4 class="anchored" data-anchor-id="sec-rclone">1.3 Configure GCS Connectivity with Rclone</h4>
 <p>Rclone is used to mount GCS buckets directly into the ERDDAP VM filesystem using a Virtual File System (VFS) mount. The persistent high-speed data disk acts as a local VFS cache to improve ERDDAP performance when serving large NetCDF datasets from cloud storage.</p>
 <p>Install rclone:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> curl https://rclone.org/install.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://rclone.org/install.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Permit FUSE mounts to use rclone’s <code>--allow-other</code> option:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ot">! </span><span class="fu">sudo</span> grep <span class="at">-qx</span> <span class="st">'user_allow_other'</span> /etc/fuse.conf<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> user_allow_other <span class="kw">|</span> <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/fuse.conf</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a shared rclone configuration:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /home/YOUR_OPERATIONAL_USERNAME/rclone/</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /home/YOUR_OPERATIONAL_USERNAME/rclone/rclone.conf <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">[gcs-remote]</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="st">type = google cloud storage</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">env_auth = true</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">project_number = YOUR_GCP_PROJECT_NUMBER</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">location = YOUR_GCP_REGION</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> root:cwatch /home/YOUR_OPERATIONAL_USERNAME/rclone/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create the local cache and mount directories, then create the systemd persistence service:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/systemd/system/rclone-mount.service <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="st">[Unit]</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="st">Description=Rclone High-Performance GCS Mount</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="st">After=network-online.target mnt-disks-erddap</span><span class="dt">\x</span><span class="st">2ddata.mount</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="st">Wants=network-online.target</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="st">[Service]</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="st">Type=notify</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="st">User=root</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="st">ExecStart=/usr/bin/rclone mount gcs-remote:YOUR_ERDDAP_BUCKET_NAME /mnt/gcs/erd </span><span class="dt">\</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="st">    --config /home/YOUR_OPERATIONAL_USERNAME/rclone/rclone.conf </span><span class="dt">\</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="st">    --allow-other </span><span class="dt">\</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="st">    --read-only </span><span class="dt">\</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="st">    --dir-cache-time 1h </span><span class="dt">\</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="st">    --attr-timeout 1m </span><span class="dt">\</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-mode full </span><span class="dt">\</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-max-age 48h </span><span class="dt">\</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-max-size 2000G </span><span class="dt">\</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-poll-interval 1m </span><span class="dt">\</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="st">    --cache-dir /mnt/disks/erddap-data/rclone-cache </span><span class="dt">\</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="st">    --buffer-size 128M </span><span class="dt">\</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-ahead 256M </span><span class="dt">\</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-chunk-size 64M </span><span class="dt">\</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-chunk-size-limit 2G </span><span class="dt">\</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="st">    --dir-perms 0775 </span><span class="dt">\</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="st">    --file-perms 0775 </span><span class="dt">\</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="st">    --gid </span><span class="va">$(</span><span class="fu">getent</span> group cwatch <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d:</span> <span class="at">-f3</span><span class="va">)</span><span class="st"> </span><span class="dt">\</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="st">    --umask 002 </span><span class="dt">\</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="st">    --rc </span><span class="dt">\</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="st">    --rc-no-auth</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="st">ExecStop=/usr/bin/fusermount -u /mnt/gcs/erd</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="st">Restart=on-failure</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="st">RestartSec=10</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="st">[Install]</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="st">WantedBy=multi-user.target</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /home/YOUR_OPERATIONAL_USERNAME/rclone/</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /home/YOUR_OPERATIONAL_USERNAME/rclone/rclone.conf <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="st">[gcs-remote]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">type = google cloud storage</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">env_auth = true</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">project_number = YOUR_GCP_PROJECT_NUMBER</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">location = YOUR_GCP_REGION</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> root:cwatch /home/YOUR_OPERATIONAL_USERNAME/rclone/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create the local cache and mount directories before starting the service:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /mnt/gcs/erd</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /mnt/disks/erddap-data/rclone-cache</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown root:cwatch /mnt/gcs /mnt/gcs/erd</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 2775 /mnt/gcs /mnt/gcs/erd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then create the systemd persistence service:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Choose a cache limit that leaves free space for ERDDAP's working files and</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># logs. For example, use 100G on a 250G disk or 2000G on a 4TB disk.</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">RCLONE_CACHE_MAX_SIZE</span><span class="op">=</span>100G</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="va">FUSERMOUNT_BIN</span><span class="op">=</span><span class="va">$(</span><span class="bu">command</span> <span class="at">-v</span> fusermount3 <span class="kw">||</span> <span class="bu">command</span> <span class="at">-v</span> fusermount<span class="va">)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-n</span> <span class="st">"</span><span class="va">$FUSERMOUNT_BIN</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"fusermount is not installed"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">exit</span> 1</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/systemd/system/rclone-mount.service <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="st">[Unit]</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="st">Description=Rclone High-Performance GCS Mount</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="st">After=network-online.target</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="st">Wants=network-online.target</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="st">RequiresMountsFor=/mnt/disks/erddap-data</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="st">[Service]</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="st">Type=notify</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="st">User=root</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="st">ExecStart=/usr/bin/rclone mount gcs-remote:YOUR_ERDDAP_BUCKET_NAME /mnt/gcs/erd </span><span class="dt">\</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="st">    --config /home/YOUR_OPERATIONAL_USERNAME/rclone/rclone.conf </span><span class="dt">\</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="st">    --allow-other </span><span class="dt">\</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="st">    --read-only </span><span class="dt">\</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="st">    --dir-cache-time 1h </span><span class="dt">\</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="st">    --attr-timeout 1m </span><span class="dt">\</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-mode full </span><span class="dt">\</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-max-age 48h </span><span class="dt">\</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-max-size </span><span class="va">${RCLONE_CACHE_MAX_SIZE}</span><span class="st"> </span><span class="dt">\</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-cache-poll-interval 1m </span><span class="dt">\</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="st">    --cache-dir /mnt/disks/erddap-data/rclone-cache </span><span class="dt">\</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="st">    --buffer-size 128M </span><span class="dt">\</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-ahead 256M </span><span class="dt">\</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-chunk-size 64M </span><span class="dt">\</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="st">    --vfs-read-chunk-size-limit 2G </span><span class="dt">\</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="st">    --dir-perms 0775 </span><span class="dt">\</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="st">    --file-perms 0775 </span><span class="dt">\</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="st">    --gid </span><span class="va">$(</span><span class="fu">getent</span> group cwatch <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d:</span> <span class="at">-f3</span><span class="va">)</span><span class="st"> </span><span class="dt">\</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="st">    --umask 002 </span><span class="dt">\</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="st">    --rc </span><span class="dt">\</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="st">    --rc-no-auth</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="st">ExecStop=</span><span class="va">${FUSERMOUNT_BIN}</span><span class="st"> -u /mnt/gcs/erd</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="st">Restart=on-failure</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="st">RestartSec=10</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="st">[Install]</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="st">WantedBy=multi-user.target</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Key rclone mount notes:</p>
 <ul>
 <li><code>--read-only</code> prevents accidental modification of cloud-hosted datasets.</li>
 <li><code>--vfs-cache-mode full</code> enables local caching on the persistent disk.</li>
+<li><code>--vfs-cache-max-size</code> must remain comfortably below the persistent disk’s available capacity so ERDDAP working files and logs cannot be crowded out.</li>
 <li><code>--vfs-read-ahead</code> improves sequential read performance for ERDDAP requests.</li>
 <li><code>--attr-timeout 1m</code> helps rclone detect when NRT files are replaced by science-quality versions in GCS.</li>
+<li><code>--dir-cache-time 1h</code> means a newly created cloud directory might not appear through the mounted filesystem for up to an hour unless the VFS directory cache is refreshed.</li>
+<li><code>--rc</code> starts rclone’s localhost-only remote-control endpoint. <code>--rc-no-auth</code> is acceptable only because the endpoint remains bound to localhost and is protected by the VM.</li>
 </ul>
 <p>Enable and start the service:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable rclone-mount.service</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start rclone-mount.service</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable rclone-mount.service</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start rclone-mount.service</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Verify the mount and cache status:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /mnt/gcs/erd       <span class="co"># Confirm GCS bucket contents are visible</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> rc vfs/stats       <span class="co"># Monitor cache usage and read-ahead status</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /mnt/gcs/erd       <span class="co"># Confirm GCS bucket contents are visible</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> rc vfs/stats      <span class="co"># Monitor cache usage and read-ahead status</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>After adding or replacing objects directly in GCS, refresh the mounted directory cache when the files must become visible immediately:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> rc vfs/refresh recursive=true</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For a very large bucket, refresh only the affected directory when possible because a recursive refresh can take a long time:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> rc vfs/refresh dir=PATH/RELATIVE/TO/BUCKET recursive=true</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1029,47 +1131,125 @@ Tip
 <h3 class="anchored" data-anchor-id="install-and-configure-erddap">2. Install and Configure ERDDAP</h3>
 <section id="run-the-swfsc-erddap-installation-script" class="level4">
 <h4 class="anchored" data-anchor-id="run-the-swfsc-erddap-installation-script">2.1 Run the SWFSC ERDDAP Installation Script</h4>
-<p>The installation script installs pinned versions of Java, Tomcat, ERDDAP, and the required system dependencies. It also configures the <code>tomcat-erddap</code> systemd service and ERDDAP’s persistent working directory.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-O</span> erddap_setup.sh <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  https://raw.githubusercontent.com/erd-coastwatch/swfsc-gcp-migration/main/scripts/erddap/erddap_setup.sh</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 700 erddap_setup.sh</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> <span class="at">-n</span> erddap_setup.sh</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./erddap_setup.sh</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The public installation script installs pinned versions of Java, Tomcat, ERDDAP, and the required system dependencies. It also configures the <code>tomcat-erddap</code> systemd service, ERDDAP’s persistent working directory, and Tomcat’s reverse-proxy handling. Pinning prevents an untested upstream release from silently changing an installation; review and test the script whenever an ERDDAP version is updated.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-O</span> erddap_setup.sh <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  https://raw.githubusercontent.com/erd-coastwatch/swfsc-gcp-migration/main/scripts/erddap/erddap_setup.sh</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 700 erddap_setup.sh</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> <span class="at">-n</span> erddap_setup.sh</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./erddap_setup.sh</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The installer enables the <code>tomcat-erddap</code> service but does not start it. This allows <code>setup.xml</code> and <code>datasets.xml</code> to be configured before ERDDAP begins loading datasets.</p>
 <p>The installer refuses to overwrite an existing Java or Tomcat installation. ERDDAP upgrades should be performed as a separate, planned operation.</p>
+<p>Review the versions that will be installed without modifying the host:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./erddap_setup.sh</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="configure-erddap" class="level4">
 <h4 class="anchored" data-anchor-id="configure-erddap">2.2 Configure ERDDAP</h4>
-<p>Review and update the ERDDAP configuration:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sudoedit</span> /usr/local/tomcat_erddap/content/erddap/setup.xml</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sudoedit</span> /usr/local/tomcat_erddap/content/erddap/datasets.xml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Review and update the ERDDAP configuration. Follow the <a href="https://erddap.github.io/docs/server-admin/deploy-install">official ERDDAP installation documentation</a> and, at minimum, verify:</p>
+<ul>
+<li><code>bigParentDirectory</code></li>
+<li><code>baseUrl</code> and <code>baseHttpsUrl</code></li>
+<li>administrator name, institution, address, phone, and email</li>
+<li>outbound email settings, or intentionally disabled email settings for staging</li>
+<li><code>flagKeyKey</code></li>
+<li>subscription and authentication settings</li>
+<li>the intended <code>datasetsRegex</code> and <code>datasets.xml</code></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sudoedit</span> /usr/local/tomcat_erddap/content/erddap/setup.xml</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sudoedit</span> /usr/local/tomcat_erddap/content/erddap/datasets.xml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When ERDDAP is behind an HTTPS load balancer, both public URL values should use the externally visible hostname. This prevents mixed-content failures where an HTTPS page tries to load CSS and images over HTTP.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">baseUrl</span>&gt;https://YOUR_ERDDAP_HOSTNAME&lt;/<span class="kw">baseUrl</span>&gt;</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">baseHttpsUrl</span>&gt;https://YOUR_ERDDAP_HOSTNAME&lt;/<span class="kw">baseHttpsUrl</span>&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The installer adds a Tomcat <code>RemoteIpValve</code> so Tomcat honors the load balancer’s <code>X-Forwarded-For</code> and <code>X-Forwarded-Proto</code> headers:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Valve</span><span class="ot"> className=</span><span class="st">"org.apache.catalina.valves.RemoteIpValve"</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ot">       remoteIpHeader=</span><span class="st">"X-Forwarded-For"</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ot">       protocolHeader=</span><span class="st">"X-Forwarded-Proto"</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ot">       protocolHeaderHttpsValue=</span><span class="st">"https"</span> /&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The default persistent working directory is:</p>
 <pre class="text"><code>/mnt/disks/erddap-data/erddap/</code></pre>
 <p>Confirm the configuration file permissions:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown tomcat:cwatch <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/setup.xml <span class="dt">\</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/datasets.xml</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 640 <span class="dt">\</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/setup.xml <span class="dt">\</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/datasets.xml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown tomcat:cwatch <span class="dt">\</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/setup.xml <span class="dt">\</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/datasets.xml</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 640 <span class="dt">\</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/setup.xml <span class="dt">\</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  /usr/local/tomcat_erddap/content/erddap/datasets.xml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Validate the XML before starting ERDDAP:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> xmllint <span class="at">--noout</span> /usr/local/tomcat_erddap/content/erddap/setup.xml</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> xmllint <span class="at">--noout</span> /usr/local/tomcat_erddap/content/erddap/datasets.xml</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> xmllint <span class="at">--noout</span> /usr/local/tomcat_erddap/conf/server.xml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="start-and-verify-erddap" class="level4">
-<h4 class="anchored" data-anchor-id="start-and-verify-erddap">2.3 Start and Verify ERDDAP</h4>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start tomcat-erddap</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl <span class="at">--no-pager</span> <span class="at">--full</span> status tomcat-erddap</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-I</span> http://127.0.0.1:8080/erddap/index.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="configure-load-balancer-firewall-access" class="level3">
+<h3 class="anchored" data-anchor-id="configure-load-balancer-firewall-access">3. Configure Load-Balancer Firewall Access</h3>
+<p>A Google Cloud regional internal Application Load Balancer requires ingress to the backend port from both Google’s health-check ranges and the region’s proxy-only subnet. Determine the proxy-only range rather than copying a range from another project:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> compute networks subnets list <span class="dt">\</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--project</span><span class="op">=</span>YOUR_GCP_PROJECT_ID <span class="dt">\</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filter</span><span class="op">=</span><span class="st">'purpose=REGIONAL_MANAGED_PROXY'</span> <span class="dt">\</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--format</span><span class="op">=</span><span class="st">'table(name,region,network,ipCidrRange,purpose,role)'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create narrowly scoped VPC firewall rules for TCP 8080. If organizational policy allows destination ranges in VPC firewall rules, restrict these rules to the backend VM addresses.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> compute firewall-rules create allow-erddap-lb-health-checks <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--project</span><span class="op">=</span>YOUR_GCP_PROJECT_ID <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--network</span><span class="op">=</span>YOUR_NETWORK <span class="dt">\</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--direction</span><span class="op">=</span>INGRESS <span class="dt">\</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--action</span><span class="op">=</span>ALLOW <span class="dt">\</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--rules</span><span class="op">=</span>tcp:8080 <span class="dt">\</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--source-ranges</span><span class="op">=</span>130.211.0.0/22,35.191.0.0/16 <span class="dt">\</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--destination-ranges</span><span class="op">=</span>YOUR_ERDDAP_BACKEND_IPS</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> compute firewall-rules create allow-erddap-lb-proxy-ingress <span class="dt">\</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--project</span><span class="op">=</span>YOUR_GCP_PROJECT_ID <span class="dt">\</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--network</span><span class="op">=</span>YOUR_NETWORK <span class="dt">\</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--direction</span><span class="op">=</span>INGRESS <span class="dt">\</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--action</span><span class="op">=</span>ALLOW <span class="dt">\</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--rules</span><span class="op">=</span>tcp:8080 <span class="dt">\</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--source-ranges</span><span class="op">=</span>YOUR_PROXY_ONLY_SUBNET <span class="dt">\</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--destination-ranges</span><span class="op">=</span>YOUR_ERDDAP_BACKEND_IPS</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>NOAA VM images may also enable Ubuntu’s Uncomplicated Firewall (UFW). Allow the same sources locally, replacing the destination address and proxy range:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from 130.211.0.0/22 <span class="dt">\</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment <span class="st">'Google LB health checks'</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from 35.191.0.0/16 <span class="dt">\</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment <span class="st">'Google LB health checks'</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from YOUR_PROXY_ONLY_SUBNET <span class="dt">\</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 8080 comment <span class="st">'Regional LB proxy subnet'</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status numbered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Do not expose port 8080 to the public internet. The load balancer terminates HTTPS and connects to Tomcat on the private backend address.</p>
+</section>
+<section id="start-and-verify-erddap" class="level3">
+<h3 class="anchored" data-anchor-id="start-and-verify-erddap">4. Start and Verify ERDDAP</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start tomcat-erddap</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl <span class="at">--no-pager</span> <span class="at">--full</span> status tomcat-erddap</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSI</span> http://127.0.0.1:8080/erddap/status.html</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSI</span> http://YOUR_ERDDAP_INTERNAL_IP:8080/erddap/status.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Follow the service log during the initial dataset load:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> tomcat-erddap <span class="at">-f</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> tomcat-erddap <span class="at">-f</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Follow dataset construction in ERDDAP’s application log:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="va">log</span><span class="op">=</span>/mnt/disks/erddap-data/erddap/logs/log.txt</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tail <span class="at">-F</span> <span class="st">"</span><span class="va">$log</span><span class="st">"</span> <span class="kw">|</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">--line-buffered</span> <span class="at">-E</span> <span class="dt">\</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">'constructing EDD|constructor finished|LoadDatasets.run finished|failed to load|ERROR:|Exception'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>From Cloud Shell, confirm that the load balancer considers the backend healthy:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> compute backend-services get-health YOUR_BACKEND_SERVICE <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--project</span><span class="op">=</span>YOUR_GCP_PROJECT_ID <span class="dt">\</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--region</span><span class="op">=</span>YOUR_GCP_REGION</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Confirm the external route and generated HTTPS assets:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-kfsSI</span> https://YOUR_ERDDAP_HOSTNAME/erddap/status.html</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-kfsS</span> https://YOUR_ERDDAP_HOSTNAME/erddap/index.html <span class="kw">|</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-oE</span> <span class="st">'&lt;link[^&gt;]*erddap2.css[^&gt;]*&gt;'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The backend must report <code>HEALTHY</code>, the status request must return HTTP 200, and the CSS URL must begin with <code>https://YOUR_ERDDAP_HOSTNAME/</code>. Use <code>-k</code> only for a staging certificate that is not yet trusted; production clients should validate the complete certificate chain.</p>
 <p>Stop or restart ERDDAP with:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl stop tomcat-erddap</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart tomcat-erddap</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl stop tomcat-erddap</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart tomcat-erddap</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

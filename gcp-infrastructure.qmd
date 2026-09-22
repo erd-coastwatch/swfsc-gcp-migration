@@ -6,11 +6,20 @@ This section covers the Terraform-managed infrastructure layer: virtual machines
 
 ### 1. Access the Infrastructure Configuration
 
-Before creating or modifying any VM environment, access the Terraform infrastructure repository used to manage the deployment configuration. In this setup, the Terraform configuration is stored in a centralized source control repository managed within Google Cloud.
+Before creating or modifying any VM environment, access the source repository that contains the Terraform configuration. The original SWFSC deployment used Google Cloud Source Repositories, but Cloud Source Repositories is unavailable to new customers. Terraform source files can instead be stored in GitHub, Google Secure Source Manager, or another controlled Git repository.
+
+The source repository and Terraform state backend are separate:
+
+| Item | Purpose | Example location |
+|---|---|---|
+| Terraform source | Reviewable `.tf` files and Git history | GitHub, Secure Source Manager, or an existing Cloud Source Repository |
+| Terraform state | Records the cloud resources managed by Terraform | A versioned, access-controlled GCS bucket configured in `backend "gcs"` |
+
+Terraform does not require its source files to live in Google Cloud. The files only need to be available on the workstation, Cloud Shell session, or CI runner where Terraform executes.
 
 1. Log into the [Google Cloud Console](https://console.cloud.google.com).
 2. Start Cloud Shell by clicking the terminal icon (`>_`) in the top-right corner.
-3. Clone the infrastructure repository:
+3. Clone the infrastructure repository using the URL for the selected Git provider. For an organization that already has access to Cloud Source Repositories:
 
 ```{.bash}
 git clone https://source.developers.google.com/p/YOUR_GCP_PROJECT_ID/r/YOUR_TERRAFORM_REPO
@@ -19,6 +28,26 @@ cd YOUR_TERRAFORM_REPO
 ```
 
 The repository contains the Terraform configuration files used to define VM infrastructure, storage resources, networking, and related cloud resources.
+
+For GitHub or Secure Source Manager, replace the clone URL above with the repository's HTTPS or SSH clone URL. Do not copy the `.terraform/` working directory or local state files between systems.
+
+::: {.callout-important}
+### Using this configuration outside the SWFSC GCP project
+
+The Terraform examples in this guide are templates, not a portable deployment that can be applied unchanged. Users deploying into another GCP project must provide their own:
+
+- GCP project, region, and zone
+- Terraform state bucket
+- service accounts and IAM permissions
+- VPC network and subnet
+- approved boot image or existing snapshot
+- snapshot policy
+- bucket and disk names
+- NOAA-required labels and organization-policy settings
+
+Do not initialize Terraform against the SWFSC state bucket or apply the configuration using SWFSC project values. Replace the project-specific values first, then run `terraform init`, `terraform validate`, and `terraform plan` in a separate state backend.
+:::
+
 
 ### 2. Review and Deploy Infrastructure with Terraform
 
@@ -187,13 +216,46 @@ resource "google_compute_disk_resource_policy_attachment" "erddap_data_snap" {
 
 Key configuration notes:
 
-- `c4-highmem-*` instances are recommended for ERDDAP workloads — ERDDAP benefits from additional memory for dataset caching and large NetCDF access.
+- Keep the `metadata` block on every VM resource. NOAA organization policies can reject a deployment when `block-project-ssh-keys` or `enable-osconfig` is omitted.
+- `c4-highmem-*` instances are recommended for data-heavy ERDDAP workloads because ERDDAP benefits from additional memory for dataset caching and large NetCDF access. A mostly remote-data catalog can start with a smaller instance and disk, then be resized after monitoring actual demand.
 - `hyperdisk-balanced` storage is used for high-throughput NetCDF access and rclone VFS caching.
 - GVNIC networking is required for C4-series instances.
 - The attached data disk is separated from the boot disk to simplify upgrades, rebuilds, and recovery.
 - Snapshot policies are recommended for automated backup and recovery.
 
+#### Boot Image Versus Existing Snapshot
+
+The `initialize_params` block must reference a resource that already exists. For a new installation, use an approved image family as shown above:
+
+```{.python}
+initialize_params {
+  image = "projects/YOUR_TRUSTED_IMAGE_PROJECT/global/images/family/YOUR_IMAGE_FAMILY"
+  size  = "100"
+  type  = "hyperdisk-balanced"
+}
+```
+
+Use `snapshot` only when restoring or cloning from a snapshot that has already been created:
+
+```{.python}
+initialize_params {
+  snapshot = "projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"
+  size     = "360"
+  type     = "hyperdisk-balanced"
+}
+```
+
+Terraform does not create a missing snapshot merely because its name appears in `initialize_params`. A `404 notFound` error means the snapshot reference is wrong or the prerequisite snapshot has not been created. Do not ignore that error; either create/import the snapshot first or switch the VM definition to an approved image.
+
 ### 3. Deploy Infrastructure
+
+Initialize the working directory and validate the configuration before planning:
+
+```{.bash}
+terraform init
+terraform fmt -check
+terraform validate
+```
 
 After reviewing and editing the Terraform configuration, preview the proposed changes:
 
@@ -207,7 +269,7 @@ Carefully review the output before applying, especially in existing environments
 terraform apply   # Create or update VMs, disks, buckets, IAM permissions, and related resources
 ```
 
-In some environments, `terraform apply` may need to be run more than once if dependent resources are still initializing.
+If an apply fails, correct the missing prerequisite, permission, quota, or configuration error before running it again. Do not treat a partially created VM as a successful deployment; review the next plan to confirm Terraform's state matches the intended infrastructure.
 
 ---
 
