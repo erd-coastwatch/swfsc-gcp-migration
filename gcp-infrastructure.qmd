@@ -31,6 +31,24 @@ The repository contains the Terraform configuration files used to define VM infr
 
 For GitHub or Secure Source Manager, replace the clone URL above with the repository's HTTPS or SSH clone URL. Do not copy the `.terraform/` working directory or local state files between systems.
 
+::: {.callout-important}
+### Using this configuration outside the SWFSC GCP project
+
+The Terraform examples in this guide are templates, not a portable deployment that can be applied unchanged. Users deploying into another GCP project must provide their own:
+
+- GCP project, region, and zone
+- Terraform state bucket
+- service accounts and IAM permissions
+- VPC network and subnet
+- approved boot image or existing snapshot
+- snapshot policy
+- bucket and disk names
+- NOAA-required labels and organization-policy settings
+
+Do not initialize Terraform against the SWFSC state bucket or apply the configuration using SWFSC project values. Replace the project-specific values first, then run `terraform init`, `terraform validate`, and `terraform plan` in a separate state backend.
+:::
+
+
 ### 2. Review and Deploy Infrastructure with Terraform
 
 The Terraform configuration is organized across three main files.
