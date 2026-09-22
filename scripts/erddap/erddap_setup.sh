@@ -362,6 +362,7 @@ done
 
 run_as_root chown -R "${TOMCAT_USER}:${TOMCAT_GROUP}" "${TOMCAT_INSTALL}"
 run_as_root chmod -R o-rwx "${TOMCAT_INSTALL}"
+run_as_root chmod 0750 "${TOMCAT_INSTALL}"
 run_as_root find "${TOMCAT_INSTALL}/bin" -maxdepth 1 -type f -name '*.sh' \
     -exec chmod 0750 '{}' +
 run_as_root chmod 0750 "${TOMCAT_INSTALL}/content/erddap"

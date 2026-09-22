@@ -51,6 +51,20 @@ sudo mount -o discard,defaults \
     /dev/disk/by-id/google-erddap-data \
     /mnt/disks/erddap-data
 
+# Make the mount persistent across VM reboots
+disk_uuid=$(sudo blkid -s UUID -o value \
+    /dev/disk/by-id/google-erddap-data)
+test -n "$disk_uuid" || {
+  echo "Unable to determine the data-disk UUID" >&2
+  exit 1
+}
+
+sudo cp -a /etc/fstab "/etc/fstab.before-erddap-$(date +%Y%m%d-%H%M%S)"
+if ! grep -qE "^[[:space:]]*UUID=${disk_uuid}[[:space:]]" /etc/fstab; then
+  echo "UUID=${disk_uuid} /mnt/disks/erddap-data ext4 defaults,discard,nofail 0 2" |
+    sudo tee -a /etc/fstab
+fi
+
 # Set permissions for the shared cwatch group
 sudo chown root:cwatch /mnt/disks
 sudo chmod 2775 /mnt/disks
@@ -67,6 +81,11 @@ Verify every directory in the path is traversable by `cwatch` members. Correct p
 namei -l /mnt/disks/erddap-data
 findmnt /mnt/disks/erddap-data
 df -hT /mnt/disks/erddap-data
+
+# Validate the fstab entry before rebooting
+sudo umount /mnt/disks/erddap-data
+sudo mount -a
+findmnt /mnt/disks/erddap-data
 ```
 
 #### 1.3 Configure GCS Connectivity with Rclone {#sec-rclone}
@@ -76,7 +95,7 @@ Rclone is used to mount GCS buckets directly into the ERDDAP VM filesystem using
 Install rclone:
 
 ```{.bash}
-sudo curl https://rclone.org/install.sh | sudo bash
+curl -fsSL https://rclone.org/install.sh | sudo bash
 ```
 
 Permit FUSE mounts to use rclone's `--allow-other` option:
@@ -115,11 +134,22 @@ sudo chmod 2775 /mnt/gcs /mnt/gcs/erd
 Then create the systemd persistence service:
 
 ```{.bash}
+# Choose a cache limit that leaves free space for ERDDAP's working files and
+# logs. For example, use 100G on a 250G disk or 2000G on a 4TB disk.
+RCLONE_CACHE_MAX_SIZE=100G
+
+FUSERMOUNT_BIN=$(command -v fusermount3 || command -v fusermount)
+test -n "$FUSERMOUNT_BIN" || {
+  echo "fusermount is not installed" >&2
+  exit 1
+}
+
 sudo tee /etc/systemd/system/rclone-mount.service > /dev/null <<EOF
 [Unit]
 Description=Rclone High-Performance GCS Mount
-After=network-online.target mnt-disks-erddap\x2ddata.mount
+After=network-online.target
 Wants=network-online.target
+RequiresMountsFor=/mnt/disks/erddap-data
 
 [Service]
 Type=notify
@@ -133,7 +163,7 @@ ExecStart=/usr/bin/rclone mount gcs-remote:YOUR_ERDDAP_BUCKET_NAME /mnt/gcs/erd 
     --attr-timeout 1m \
     --vfs-cache-mode full \
     --vfs-cache-max-age 48h \
-    --vfs-cache-max-size 2000G \
+    --vfs-cache-max-size ${RCLONE_CACHE_MAX_SIZE} \
     --vfs-cache-poll-interval 1m \
     --cache-dir /mnt/disks/erddap-data/rclone-cache \
     --buffer-size 128M \
@@ -147,7 +177,7 @@ ExecStart=/usr/bin/rclone mount gcs-remote:YOUR_ERDDAP_BUCKET_NAME /mnt/gcs/erd 
     --rc \
     --rc-no-auth
 
-ExecStop=/usr/bin/fusermount -u /mnt/gcs/erd
+ExecStop=${FUSERMOUNT_BIN} -u /mnt/gcs/erd
 Restart=on-failure
 RestartSec=10
 
@@ -160,6 +190,7 @@ Key rclone mount notes:
 
 - `--read-only` prevents accidental modification of cloud-hosted datasets.
 - `--vfs-cache-mode full` enables local caching on the persistent disk.
+- `--vfs-cache-max-size` must remain comfortably below the persistent disk's available capacity so ERDDAP working files and logs cannot be crowded out.
 - `--vfs-read-ahead` improves sequential read performance for ERDDAP requests.
 - `--attr-timeout 1m` helps rclone detect when NRT files are replaced by science-quality versions in GCS.
 - `--dir-cache-time 1h` means a newly created cloud directory might not appear through the mounted filesystem for up to an hour unless the VFS directory cache is refreshed.
