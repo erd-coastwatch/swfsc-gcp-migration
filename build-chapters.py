@@ -8,20 +8,25 @@ import yaml
 top_chapters = [
     {"text": "Overview", "href": "index.qmd"},
     {
-        "part": "Cloud Setup",
+        "part": "Deploy ERDDAP on GCP",
         "chapters": [
             "gcp-setup.qmd",
+            "architecture.qmd",
             "gcp-infrastructure.qmd",
             "gcp-vm-access.qmd",
             "gcp-erddap-vm.qmd",
-            "gcp-processing-vm.qmd",
             "gcp-migration-recovery.qmd",
-            "gcp-templates.qmd",
-            "architecture.qmd"
         ],
     },
     {
-        "part": "Workflows",
+        "part": "Optional Processing Infrastructure",
+        "chapters": [
+            "gcp-processing-vm.qmd",
+            "gcp-templates.qmd",
+        ],
+    },
+    {
+        "part": "SWFSC Workflow Examples",
         "chapters": [
             "mh1-processor.qmd",
             "mh1-primprod.qmd",
@@ -34,7 +39,7 @@ top_chapters = [
         ],
     },
     {
-        "part": "Presentations",
+        "part": "Project History",
         "chapters": [
             "erddap-cloud-migration-presentations.qmd",
         ],
@@ -62,7 +67,7 @@ def build_code_parts(code_pages: list[str]) -> list[dict]:
     for folder, files in groupby(code_pages, key=lambda p: Path(p).parent.name):
         code_parts.append(
             {
-                "part": f"Code: {folder}",
+                "part": f"SWFSC Code Example: {folder}",
                 "chapters": list(files),
             }
         )

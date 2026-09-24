@@ -6,24 +6,27 @@ project:
   - workflows/**
   - assets/**
 book:
-  title: SWFSC ERDDAP Cloud Migration
+  title: ERDDAP on Google Cloud
+  subtitle: A practical deployment guide based on the SWFSC implementation
   sidebar:
     logo: assets/logo.png
     title: ''
   chapters:
   - text: Overview
     href: index.qmd
-  - part: Cloud Setup
+  - part: Deploy ERDDAP on GCP
     chapters:
     - gcp-setup.qmd
+    - architecture.qmd
     - gcp-infrastructure.qmd
     - gcp-vm-access.qmd
     - gcp-erddap-vm.qmd
-    - gcp-processing-vm.qmd
     - gcp-migration-recovery.qmd
+  - part: Optional Processing Infrastructure
+    chapters:
+    - gcp-processing-vm.qmd
     - gcp-templates.qmd
-    - architecture.qmd
-  - part: Workflows
+  - part: SWFSC Workflow Examples
     chapters:
     - mh1-processor.qmd
     - mh1-primprod.qmd
@@ -33,10 +36,10 @@ book:
     - crw.qmd
     - ascat.qmd
     - nsidc.qmd
-  - part: Presentations
+  - part: Project History
     chapters:
     - erddap-cloud-migration-presentations.qmd
-  - part: 'Code: ascat'
+  - part: 'SWFSC Code Example: ascat'
     chapters:
     - code-pages/ascat/ascat_c_cdl.qmd
     - code-pages/ascat/ascat_composite_control.qmd
@@ -51,7 +54,7 @@ book:
     - code-pages/ascat/example_cdl.qmd
     - code-pages/ascat/make_ascat_multiday.qmd
     - code-pages/ascat/requirements.qmd
-  - part: 'Code: charm'
+  - part: 'SWFSC Code Example: charm'
     chapters:
     - code-pages/charm/charm_data_process_functions.qmd
     - code-pages/charm/charm_dineof_functions.qmd
@@ -77,7 +80,7 @@ book:
     - code-pages/charm/now_chlor_a_v4.qmd
     - code-pages/charm/requirements.qmd
     - code-pages/charm/viirs_L3.qmd
-  - part: 'Code: crw'
+  - part: 'SWFSC Code Example: crw'
     chapters:
     - code-pages/crw/control_crw_daily.qmd
     - code-pages/crw/control_crw_monthly.qmd
@@ -87,7 +90,7 @@ book:
     - code-pages/crw/requirements.qmd
     - code-pages/crw/update_sst_ssta_daily.qmd
     - code-pages/crw/update_sst_ssta_monthly.qmd
-  - part: 'Code: mh1-primprod'
+  - part: 'SWFSC Code Example: mh1-primprod'
     chapters:
     - code-pages/mh1-primprod/config.qmd
     - code-pages/mh1-primprod/control_mh1_primprod.qmd
@@ -98,7 +101,7 @@ book:
     - code-pages/mh1-primprod/ppCompositeUtil.qmd
     - code-pages/mh1-primprod/primprodUtil.qmd
     - code-pages/mh1-primprod/requirements.qmd
-  - part: 'Code: mh1-processor'
+  - part: 'SWFSC Code Example: mh1-processor'
     chapters:
     - code-pages/mh1-processor/config.qmd
     - code-pages/mh1-processor/deploy_job.qmd
@@ -114,7 +117,7 @@ book:
     - code-pages/mh1-processor/getMPOC_Sci.qmd
     - code-pages/mh1-processor/requirements.qmd
     - code-pages/mh1-processor/roylib.qmd
-  - part: 'Code: mur-sst'
+  - part: 'SWFSC Code Example: mur-sst'
     chapters:
     - code-pages/mur-sst/Canny1.qmd
     - code-pages/mur-sst/Canny2.qmd
@@ -132,7 +135,7 @@ book:
     - code-pages/mur-sst/mur_v42_downloader.qmd
     - code-pages/mur-sst/requirements.qmd
     - code-pages/mur-sst/roylib.qmd
-  - part: 'Code: nsidc'
+  - part: 'SWFSC Code Example: nsidc'
     chapters:
     - code-pages/nsidc/config.qmd
     - code-pages/nsidc/control_nsidc.qmd
@@ -142,7 +145,7 @@ book:
     - code-pages/nsidc/make_nsidc_daily_v6.qmd
     - code-pages/nsidc/make_nsidc_monthly_v6.qmd
     - code-pages/nsidc/requirements.qmd
-  - part: 'Code: viirs-netpp'
+  - part: 'SWFSC Code Example: viirs-netpp'
     chapters:
     - code-pages/viirs-netpp/config.qmd
     - code-pages/viirs-netpp/control_viirs_netpp.qmd

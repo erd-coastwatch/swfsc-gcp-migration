@@ -2,155 +2,214 @@
 title: "Cloud Infrastructure Setup"
 ---
 
-This section covers the Terraform-managed infrastructure layer: virtual machines, storage buckets, networking, service accounts, IAM permissions, and supporting cloud services.
+This chapter shows how to define the GCP resources around ERDDAP with Terraform. Terraform is an infrastructure-as-code tool that supports multiple cloud providers; the examples here use the Google Cloud provider and are therefore GCP-specific.
 
-### 1. Access the Infrastructure Configuration
+The code blocks are sanitized templates. They are not a complete deployment that should be applied unchanged.
 
-Before creating or modifying any VM environment, access the source repository that contains the Terraform configuration. The original SWFSC deployment used Google Cloud Source Repositories, but Cloud Source Repositories is unavailable to new customers. Terraform source files can instead be stored in GitHub, Google Secure Source Manager, or another controlled Git repository.
+### 1. Establish Source and State Ownership
 
-The source repository and Terraform state backend are separate:
+Keep the deployable Terraform configuration in one controlled Git repository so future maintainers can find its history, owners, and review process. A public documentation repository may contain sanitized examples, while the configuration containing real project names and operational values normally belongs in a private organization repository.
 
-| Item | Purpose | Example location |
+Terraform source and Terraform state are different assets:
+
+| Item | Purpose | Recommended location |
 |---|---|---|
-| Terraform source | Reviewable `.tf` files and Git history | GitHub, Secure Source Manager, or an existing Cloud Source Repository |
-| Terraform state | Records the cloud resources managed by Terraform | A versioned, access-controlled GCS bucket configured in `backend "gcs"` |
+| Terraform source | Versioned `.tf` files, examples, and review history | Controlled GitHub or Google Secure Source Manager repository |
+| Terraform state | Records the resources managed by this configuration | Dedicated, access-controlled GCS backend bucket |
 
-Terraform does not require its source files to live in Google Cloud. The files only need to be available on the workstation, Cloud Shell session, or CI runner where Terraform executes.
+Do not copy `.terraform/`, local state files, saved plan files, or credentials between systems. Do not let two unrelated Terraform configurations manage the same resource.
 
-1. Log into the [Google Cloud Console](https://console.cloud.google.com).
-2. Start Cloud Shell by clicking the terminal icon (`>_`) in the top-right corner.
-3. Clone the infrastructure repository using the URL for the selected Git provider. For an organization that already has access to Cloud Source Repositories:
+Before continuing, identify who owns the following:
+
+- GCP project, billing, APIs, quotas, and organization policies;
+- Terraform repository and state bucket;
+- service accounts and IAM bindings;
+- VPC, subnet, firewall, and load-balancer resources;
+- approved boot images and snapshot policies;
+- required organizational labels.
+
+### 2. Prepare the Terraform Workstation
+
+Terraform can run from Cloud Shell, a managed workstation, or an approved CI runner. First check whether it is already installed:
 
 ```{.bash}
-git clone https://source.developers.google.com/p/YOUR_GCP_PROJECT_ID/r/YOUR_TERRAFORM_REPO
-# Replace with the appropriate infrastructure repository for your environment
-cd YOUR_TERRAFORM_REPO
+terraform version
+gcloud version
 ```
 
-The repository contains the Terraform configuration files used to define VM infrastructure, storage resources, networking, and related cloud resources.
+If Terraform is missing, install it using the [official HashiCorp installation instructions](https://developer.hashicorp.com/terraform/install).
 
-For GitHub or Secure Source Manager, replace the clone URL above with the repository's HTTPS or SSH clone URL. Do not copy the `.terraform/` working directory or local state files between systems.
+Authenticate to the intended GCP project:
 
-::: {.callout-important}
-### Using this configuration outside the SWFSC GCP project
+```{.bash}
+gcloud auth login
+gcloud config set project YOUR_GCP_PROJECT_ID
+gcloud auth list
+gcloud config list
+```
 
-The Terraform examples in this guide are templates, not a portable deployment that can be applied unchanged. Users deploying into another GCP project must provide their own:
+On a local workstation, the Google Terraform provider commonly uses Application Default Credentials:
 
-- GCP project, region, and zone
-- Terraform state bucket
-- service accounts and IAM permissions
-- VPC network and subnet
-- approved boot image or existing snapshot
-- snapshot policy
-- bucket and disk names
-- NOAA-required labels and organization-policy settings
+```{.bash}
+gcloud auth application-default login
+```
 
-Do not initialize Terraform against the SWFSC state bucket or apply the configuration using SWFSC project values. Replace the project-specific values first, then run `terraform init`, `terraform validate`, and `terraform plan` in a separate state backend.
-:::
+Cloud Shell and organization-managed runners may provide credentials differently. Authentication proves identity; IAM still determines which resources that identity may inspect or change.
 
+Clone the controlled infrastructure repository and work on a reviewable branch:
 
-### 2. Review and Deploy Infrastructure with Terraform
+```{.bash}
+git clone https://github.com/YOUR_ORGANIZATION/YOUR_TERRAFORM_REPOSITORY.git
+cd YOUR_TERRAFORM_REPOSITORY
+git switch -c YOUR_CHANGE_BRANCH
+```
 
-The Terraform configuration is organized across three main files.
+### 3. Organize the Configuration
 
-**`main.tf`** defines the Terraform backend, required provider, and shared project-wide variables including GCP project ID, region, zone, NOAA metadata labels, and environment name. These shared variables are referenced throughout `bucket.tf` and `instance.tf` to avoid hard-coding configuration values across multiple files.
+One clear file layout is shown below. Terraform loads all `.tf` files in the working directory together, so the filenames organize the code for people rather than controlling execution order.
 
-```{.python}
-# PROJECT STANDARDS & PROVIDER CONFIGURATION
-# Replace backend bucket, project variables, bucket names, and service accounts
-# with the appropriate values for your deployment.
+| File | Purpose |
+|---|---|
+| `versions.tf` | Terraform version constraint and required providers |
+| `backend.tf` | Remote-state backend declaration |
+| `variables.tf` | Input variable types and descriptions |
+| `terraform.tfvars.example` | Sanitized example values that may be committed |
+| `terraform.tfvars` | Deployment values; commit only if organizational policy permits and it contains no secrets |
+| `bucket.tf` | Optional GCS bucket and bucket-level IAM |
+| `instance.tf` | VM, boot disk, persistent data disk, and service account attachment |
+| `snapshots.tf` | Snapshot policy and disk-policy attachments |
+| `outputs.tf` | Useful names, addresses, and resource identifiers |
 
+Keep shared platform resources outside this configuration when another team or Terraform state owns them. Reference those resources as inputs or data sources instead of declaring a second copy.
+
+### 4. Configure Providers, Backend, and Inputs
+
+#### 4.1 Provider and backend
+
+`versions.tf` identifies Terraform and provider requirements:
+
+```{.terraform}
 terraform {
-  backend "gcs" {
-    bucket = "tf-local-swfsc-prod"   # Terraform remote state backend bucket
-    prefix = "terraform/state"
+  required_version = ">= 1.6, < 2.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
   }
-  required_providers { google = { source = "hashicorp/google" } }
 }
 
-# GLOBAL VARIABLES
-variable "project-id"      { default = "YOUR_GCP_PROJECT_ID" }
-variable "system-id"       { default = "YOUR_SYSTEM_ID" }
-variable "lineoffice"      { default = "YOUR_LINE_OFFICE" }
-variable "taskorder"       { default = "YOUR_TASK_ORDER" }
-variable "billing-id"      { default = "YOUR_BILLING_ID" }
-variable "application-id"  { default = "YOUR_APPLICATION_ID" }
-variable "stakeholder"     { default = "YOUR_STAKEHOLDER" }
-variable "environment"     { default = "dev" }
-variable "region1"         { default = "us-east4" }
-variable "zone1"           { default = "us-east4-a" }
+provider "google" {
+  project = var.project_id
+  region  = var.region
+  zone    = var.zone
+}
 ```
 
-**`bucket.tf`** defines the GCS buckets used by the environment and assigns IAM permissions to the service accounts that need access. In many deployments the required buckets may already exist — review the bucket names, IAM bindings, and service accounts to confirm they match the environment. Copy and edit the block below when creating a new bucket:
+Treat the version constraints as an example baseline. Select and test versions according to the organization's upgrade policy.
 
-```{.python}
-resource "google_storage_bucket" "erddap_bucket" {
-  name                        = "YOUR_ERDDAP_BUCKET_NAME"
-  project                     = var.project-id
-  location                    = var.region1
-  force_destroy               = true   # Common in dev/testing; prefer false in production
+Use a partial backend configuration so the public template does not contain a real state-bucket name:
+
+```{.terraform}
+terraform {
+  backend "gcs" {}
+}
+```
+
+The backend bucket must already exist and should have restricted IAM, versioning or another recovery control, and a retention approach appropriate to the organization.
+
+#### 4.2 Required deployment values
+
+Do not make one region or zone look universal. Require each deployment to choose them explicitly:
+
+```{.terraform}
+variable "project_id" {
+  description = "GCP project that will contain the ERDDAP resources"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP region selected for this deployment"
+  type        = string
+}
+
+variable "zone" {
+  description = "GCP zone selected for this deployment"
+  type        = string
+}
+
+variable "machine_type" {
+  description = "Compute Engine machine type selected after workload sizing"
+  type        = string
+}
+```
+
+Provide values in an approved mechanism such as `terraform.tfvars`:
+
+```{.terraform}
+project_id   = "YOUR_GCP_PROJECT_ID"
+region       = "YOUR_GCP_REGION"       # Example only: us-east4
+zone         = "YOUR_GCP_ZONE"         # Example only: us-east4-a
+machine_type = "YOUR_MACHINE_TYPE"     # Example only: c4-highmem-16
+```
+
+Add organizational metadata variables and labels required in the target environment. NOAA-specific labels are requirements for NOAA deployments, not general Terraform requirements.
+
+### 5. Define Storage and Least-Privilege IAM
+
+A GCS data bucket is optional. Create one only when ERDDAP will serve file-backed data from GCS and the bucket is not already managed elsewhere.
+
+```{.terraform}
+resource "google_storage_bucket" "erddap_data" {
+  name                        = "YOUR_GLOBALLY_UNIQUE_BUCKET_NAME"
+  project                     = var.project_id
+  location                    = var.region
+  force_destroy               = false
   uniform_bucket_level_access = true
 
   labels = {
-    environment        = var.environment
-    noaa_fismaid       = var.system-id
-    noaa_lineoffice    = var.lineoffice
-    noaa_taskorder     = var.taskorder
-    noaa_environment   = var.environment
-    noaa_applicationid = var.application-id
-    noaa_project_id    = var.project-id
-  }
-
-  hierarchical_namespace { enabled = true }
-
-  lifecycle_rule {
-    condition { num_newer_versions = 5 }
-    action    { type = "Delete" }
+    environment = "YOUR_ENVIRONMENT"
+    application = "erddap"
   }
 }
 
-locals {
-  buckets = [
-    "YOUR_PROCESSING_OR_DATA_BUCKET_NAME",
-    "YOUR_ERDDAP_BUCKET_NAME",
-  ]
-}
-
-resource "google_storage_bucket_iam_member" "vm_service_account_object_admins" {
-  for_each = toset(local.buckets)
-  bucket   = each.value
-  role     = "roles/storage.objectAdmin"
-  member   = "serviceAccount:YOUR_VM_SERVICE_ACCOUNT_EMAIL"
-}
-
-resource "google_storage_bucket_iam_member" "cloud_run_service_account_object_admins" {
-  for_each = toset(local.buckets)
-  bucket   = each.value
-  role     = "roles/storage.objectAdmin"
-  member   = "serviceAccount:YOUR_CLOUD_RUN_SERVICE_ACCOUNT_EMAIL"
+resource "google_storage_bucket_iam_member" "erddap_reader" {
+  bucket = google_storage_bucket.erddap_data.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:YOUR_ERDDAP_VM_SERVICE_ACCOUNT_EMAIL"
 }
 ```
 
-If you add a new bucket and IAM is applied through `locals.buckets`, add the new bucket name to that list as well.
+Keep `force_destroy = false` for production data. The ERDDAP VM normally needs read-only object access. Give a separate processing or publishing identity write permissions only when that workload must create, replace, or delete objects.
 
-**`instance.tf`** defines all VMs in the project, including persistent data disks, machine type, boot disk, networking, service account, metadata, labels, and snapshot policy attachments. Copy and edit the blocks below when deploying a new ERDDAP VM. For additional machine type options, refer to the [Google Cloud Compute Engine machine type documentation](https://cloud.google.com/compute/docs/machine-resource).
+### 6. Define the VM and Its Disks
 
-```{.python}
-# ERDDAP data disk
-resource "google_compute_disk" "erddap_data_disk" {
-  name    = "YOUR_ERDDAP_DATA_DISK_NAME"   # Example: erddap-data-disk
-  project = var.project-id
-  zone    = var.zone1
-  type    = "hyperdisk-balanced"            # Recommended for high I/O NetCDF workloads
-  size    = 4096                            # Disk size in GB (4 TB)
+The example separates the boot and data disks so both names and snapshot-policy attachments are explicit. Sizes, disk types, and machine types are examples to be replaced after workload sizing.
+
+```{.terraform}
+resource "google_compute_disk" "erddap_boot" {
+  name    = "YOUR_ERDDAP_BOOT_DISK_NAME"
+  project = var.project_id
+  zone    = var.zone
+  type    = "hyperdisk-balanced"
+  size    = 100
+  image   = "YOUR_APPROVED_BOOT_IMAGE"
 }
 
-# ERDDAP VM
-resource "google_compute_instance" "erddap_vm" {
-  name                  = "YOUR_ERDDAP_VM_NAME"   # Example: erd-erddap
-  project               = var.project-id
-  zone                  = var.zone1
-  machine_type          = "c4-highmem-16"          # High-memory C4 instance for ERDDAP
+resource "google_compute_disk" "erddap_data" {
+  name    = "YOUR_ERDDAP_DATA_DISK_NAME"
+  project = var.project_id
+  zone    = var.zone
+  type    = "hyperdisk-balanced"
+  size    = 250
+}
+
+resource "google_compute_instance" "erddap" {
+  name                      = "YOUR_ERDDAP_VM_NAME"
+  project                   = var.project_id
+  zone                      = var.zone
+  machine_type              = var.machine_type
   allow_stopping_for_update = true
 
   metadata = {
@@ -158,119 +217,102 @@ resource "google_compute_instance" "erddap_vm" {
     enable-osconfig        = true
   }
 
-  labels = {
-    environment        = var.environment
-    noaa_fismaid       = var.system-id
-    noaa_lineoffice    = var.lineoffice
-    noaa_taskorder     = var.taskorder
-    noaa_environment   = var.environment
-    noaa_applicationid = var.application-id
-    noaa_project_id    = var.project-id
-    role               = "erddap-server"
-  }
-
   boot_disk {
-    device_name = "YOUR_ERDDAP_BOOT_DISK_NAME"
-    initialize_params {
-      image = "YOUR_BOOT_IMAGE"
-      size  = "360"
-      type  = "hyperdisk-balanced"
-    }
+    source      = google_compute_disk.erddap_boot.id
+    auto_delete = false
   }
 
   attached_disk {
-    source      = google_compute_disk.erddap_data_disk.id
+    source      = google_compute_disk.erddap_data.id
     device_name = "erddap-data"
   }
 
   network_interface {
     subnetwork = "YOUR_SUBNETWORK_SELF_LINK"
-    nic_type   = "GVNIC"   # Required for C4-series instances
+    nic_type   = "GVNIC"
   }
 
   service_account {
-    email  = "YOUR_VM_SERVICE_ACCOUNT_EMAIL"
+    email  = "YOUR_ERDDAP_VM_SERVICE_ACCOUNT_EMAIL"
     scopes = ["cloud-platform"]
   }
 
-  lifecycle {
-    ignore_changes = [boot_disk]
+  labels = {
+    environment = "YOUR_ENVIRONMENT"
+    role        = "erddap-server"
   }
 }
+```
 
-# BACKUP & RECOVERY: Snapshot Policy Attachments
-resource "google_compute_disk_resource_policy_attachment" "erddap_boot_snap" {
-  name    = "snap-policy"
-  disk    = google_compute_instance.erddap_vm.name
-  project = var.project-id
-  zone    = var.zone1
+Add the target organization's required labels, shielded-VM settings, reservation settings, network tags, and policies. Confirm that the selected machine family supports the chosen disk and network-interface types.
+
+Attach an existing snapshot policy to both disks when that is part of the backup design:
+
+```{.terraform}
+resource "google_compute_disk_resource_policy_attachment" "erddap_boot" {
+  name    = "YOUR_SNAPSHOT_POLICY_NAME"
+  disk    = google_compute_disk.erddap_boot.name
+  project = var.project_id
+  zone    = var.zone
 }
 
-resource "google_compute_disk_resource_policy_attachment" "erddap_data_snap" {
-  name    = "snap-policy"
-  disk    = google_compute_disk.erddap_data_disk.name
-  project = var.project-id
-  zone    = var.zone1
+resource "google_compute_disk_resource_policy_attachment" "erddap_data" {
+  name    = "YOUR_SNAPSHOT_POLICY_NAME"
+  disk    = google_compute_disk.erddap_data.name
+  project = var.project_id
+  zone    = var.zone
 }
 ```
 
-Key configuration notes:
+#### Normal new deployment versus snapshot restoration
 
-- Keep the `metadata` block on every VM resource. NOAA organization policies can reject a deployment when `block-project-ssh-keys` or `enable-osconfig` is omitted.
-- `c4-highmem-*` instances are recommended for data-heavy ERDDAP workloads because ERDDAP benefits from additional memory for dataset caching and large NetCDF access. A mostly remote-data catalog can start with a smaller instance and disk, then be resized after monitoring actual demand.
-- `hyperdisk-balanced` storage is used for high-throughput NetCDF access and rclone VFS caching.
-- GVNIC networking is required for C4-series instances.
-- The attached data disk is separated from the boot disk to simplify upgrades, rebuilds, and recovery.
-- Snapshot policies are recommended for automated backup and recovery.
+For a normal initial deployment, create the boot disk from an approved image as shown above. The ERDDAP software is then installed and configured on the new VM.
 
-#### Boot Image Versus Existing Snapshot
+Use a snapshot only when restoring or cloning a disk that already contains a configured system. SWFSC used this path while replacing an existing VM during a machine-family change; it is not the normal first-installation path.
 
-The `initialize_params` block must reference a resource that already exists. For a new installation, use an approved image family as shown above:
-
-```{.python}
-initialize_params {
-  image = "projects/YOUR_TRUSTED_IMAGE_PROJECT/global/images/family/YOUR_IMAGE_FAMILY"
-  size  = "100"
-  type  = "hyperdisk-balanced"
-}
-```
-
-Use `snapshot` only when restoring or cloning from a snapshot that has already been created:
-
-```{.python}
-initialize_params {
-  snapshot = "projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"
-  size     = "360"
+```{.terraform}
+resource "google_compute_disk" "restored_boot" {
+  name     = "YOUR_RESTORED_BOOT_DISK_NAME"
+  project  = var.project_id
+  zone     = var.zone
   type     = "hyperdisk-balanced"
+  size     = 100
+  snapshot = "projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"
 }
 ```
 
-Terraform does not create a missing snapshot merely because its name appears in `initialize_params`. A `404 notFound` error means the snapshot reference is wrong or the prerequisite snapshot has not been created. Do not ignore that error; either create/import the snapshot first or switch the VM definition to an approved image.
+The snapshot must already exist. A `404 notFound` response indicates an incorrect reference or missing prerequisite, not a resource Terraform will create automatically.
 
-### 3. Deploy Infrastructure
+### 7. Initialize, Review, and Apply
 
-Initialize the working directory and validate the configuration before planning:
+Initialize against the state backend selected for this deployment:
 
 ```{.bash}
-terraform init
-terraform fmt -check
+terraform init \
+  -backend-config='bucket=YOUR_TERRAFORM_STATE_BUCKET' \
+  -backend-config='prefix=YOUR_UNIQUE_STATE_PREFIX'
+```
+
+Format and validate the configuration:
+
+```{.bash}
+terraform fmt -check -recursive
 terraform validate
 ```
 
-After reviewing and editing the Terraform configuration, preview the proposed changes:
+Create and inspect a saved plan:
 
 ```{.bash}
-terraform plan    # Review resources that will be created, modified, or destroyed
+terraform plan -out=tfplan
+terraform show tfplan
 ```
 
-Carefully review the output before applying, especially in existing environments where resources may already be in use. Once the plan looks correct, apply:
+Stop if the plan would replace, detach, or destroy a resource unexpectedly. If resources already exist, resolve ownership and import requirements before applying; do not create duplicate declarations for resources managed by another state.
+
+After review and approval, apply the saved plan:
 
 ```{.bash}
-terraform apply   # Create or update VMs, disks, buckets, IAM permissions, and related resources
+terraform apply tfplan
 ```
 
-If an apply fails, correct the missing prerequisite, permission, quota, or configuration error before running it again. Do not treat a partially created VM as a successful deployment; review the next plan to confirm Terraform's state matches the intended infrastructure.
-
----
-
----
+Run a fresh `terraform plan` afterward. A successful deployment should produce no unexpected additional changes and should leave the repository, state, and resource ownership understandable to the next maintainer.

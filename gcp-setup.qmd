@@ -2,60 +2,84 @@
 title: "Setup Overview"
 ---
 
-This section documents the Google Cloud Platform (GCP) infrastructure and system setup used to support the SWFSC CoastWatch West Coast Node cloud environment.
+The core setup path takes a new environment from architecture planning through a locally verified ERDDAP, load-balancer integration, and final reboot testing. Complete the chapters in the order shown below.
 
-The setup documentation is split into smaller pages so each phase of the migration can be read independently. Together, these pages cover Terraform-managed infrastructure, VM access, the ERDDAP serving environment, processing VM configuration, migration/recovery notes, and reusable workflow deployment templates.
+::: {.callout-important}
+The commands use placeholders such as `YOUR_GCP_PROJECT_ID`. Review and replace every placeholder before running a command. Never apply the example Terraform configuration unchanged or connect it to another group's Terraform state.
+:::
+
+## Core deployment path
 
 ```{=html}
 <div class="file-grid">
 
   <div class="file-card">
-    <h3>Cloud Infrastructure Setup</h3>
-    <p>Terraform-managed VMs, buckets, service accounts, IAM bindings, disks, labels, and snapshot policies.</p>
+    <h3>1. Project Architecture</h3>
+    <p>Choose the serving model, identify required and optional components, assign ownership, and size the initial environment.</p>
     <ul>
-      <li><a href="gcp-infrastructure.html">Open cloud infrastructure setup</a></li>
+      <li><a href="architecture.html">Review the architecture</a></li>
     </ul>
   </div>
 
   <div class="file-card">
-    <h3>Accessing VMs</h3>
-    <p>Connecting to ERDDAP and processing VMs with gcloud SSH, IAP tunneling, browser SSH, and local port forwarding.</p>
+    <h3>2. Cloud Infrastructure Setup</h3>
+    <p>Provision the private VM, persistent disk, optional bucket, service accounts, IAM, networking, and snapshot policy with Terraform.</p>
     <ul>
-      <li><a href="gcp-vm-access.html">Open VM access guide</a></li>
+      <li><a href="gcp-infrastructure.html">Deploy cloud infrastructure</a></li>
     </ul>
   </div>
 
   <div class="file-card">
-    <h3>ERDDAP VM Setup</h3>
-    <p>Operating-system setup, persistent disk initialization, rclone-mounted GCS access, Tomcat, and ERDDAP installation.</p>
+    <h3>3. Accessing VMs</h3>
+    <p>Connect through Identity-Aware Proxy without assigning a public IP or opening SSH to the internet.</p>
     <ul>
-      <li><a href="gcp-erddap-vm.html">Open ERDDAP VM setup</a></li>
+      <li><a href="gcp-vm-access.html">Configure VM access</a></li>
     </ul>
   </div>
 
   <div class="file-card">
-    <h3>Processing VM Setup</h3>
-    <p>Processing VM setup for development, testing, reprocessing, Python environments, Earthdata access, and external tools.</p>
+    <h3>4. ERDDAP VM Setup</h3>
+    <p>Safely initialize storage, optionally mount GCS, install ERDDAP, validate it locally, and connect it to the load balancer.</p>
     <ul>
-      <li><a href="gcp-processing-vm.html">Open processing VM setup</a></li>
+      <li><a href="gcp-erddap-vm.html">Build the ERDDAP server</a></li>
     </ul>
   </div>
 
   <div class="file-card">
-    <h3>Migration, Upgrade, and Recovery</h3>
-    <p>Optional data-preservation snapshots, rebuild notes, upgrade workflows, and cleanup steps used during cloud migration work.</p>
+    <h3>5. Go-Live Checklist and Recovery Basics</h3>
+    <p>Complete the minimum checks required before launch and understand when snapshots or restoration are needed later.</p>
     <ul>
-      <li><a href="gcp-migration-recovery.html">Open migration and recovery notes</a></li>
-    </ul>
-  </div>
-
-  <div class="file-card">
-    <h3>GCP Data Processing Templates</h3>
-    <p>Reusable Cloud Run and processing VM project structures used to standardize workflow repositories and deployments.</p>
-    <ul>
-      <li><a href="gcp-templates.html">Open processing templates</a></li>
+      <li><a href="gcp-migration-recovery.html">Prepare for production</a></li>
     </ul>
   </div>
 
 </div>
 ```
+
+## Optional processing infrastructure
+
+ERDDAP does not require a processing VM or Cloud Run. Use these chapters only when the same group also develops or operates data-generation workflows.
+
+```{=html}
+<div class="file-grid">
+
+  <div class="file-card">
+    <h3>Processing VM Setup</h3>
+    <p>Optional cloud VM foundation for interactive development, reprocessing, backfills, and compute-heavy workflows.</p>
+    <ul>
+      <li><a href="gcp-processing-vm.html">Configure a processing VM</a></li>
+    </ul>
+  </div>
+
+  <div class="file-card">
+    <h3>Data Processing Templates</h3>
+    <p>Optional SWFSC repository structures for Cloud Run Jobs and VM-based processing projects.</p>
+    <ul>
+      <li><a href="gcp-templates.html">Review processing templates</a></li>
+    </ul>
+  </div>
+
+</div>
+```
+
+The later workflow and code sections are SWFSC implementation examples. They are useful references for processing design but are not part of the ERDDAP deployment sequence.
