@@ -2,109 +2,99 @@
 title: "Accessing VMs"
 ---
 
-Once infrastructure is deployed, you can connect to any VM using either the `gcloud` CLI or the GCP Console browser-based SSH. Both methods use [Identity-Aware Proxy (IAP)](https://cloud.google.com/iap/docs/concepts-overview) tunneling, so no public IP address or open firewall ports are required.
+Administrators normally connect to private VMs with the `gcloud` CLI or Google Cloud Console browser-based SSH. Both can use Identity-Aware Proxy (IAP), avoiding a public VM address or an SSH rule open to the internet.
 
-### Prerequisites
+### 1. Prepare Access
 
-Before connecting to a VM for the first time, complete the following setup steps.
-
-#### 1. Install the Google Cloud SDK
-
-Download and install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) for your operating system. The SDK provides the `gcloud` command-line tool used throughout this documentation.
-
-After installation, initialize the SDK:
-
-```{.bash}
-gcloud init
-```
-
-This walks you through selecting a Google account and default project.
-
-#### 2. Authenticate
-
-Log in with your Google account:
+Install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install), authenticate, and select the intended project:
 
 ```{.bash}
 gcloud auth login
-```
-
-This opens a browser window to complete authentication. Once done, confirm the active account and project:
-
-```{.bash}
+gcloud config set project YOUR_GCP_PROJECT_ID
 gcloud config list
 ```
 
-#### 3. Confirm IAP Access
+An administrator must grant permission to establish IAP tunnels and log in to the target VM. Common roles include:
 
-Connecting to VMs through the CLI requires the `IAP-secured Tunnel User` (`roles/iap.tunnelResourceAccessor`) IAM role on the project. In this setup, that role is managed by IT through a centralized `roles.tf` Terraform configuration — you will need to request access from whoever administers that if you don't have it yet.
+- `roles/iap.tunnelResourceAccessor` for the IAP tunnel;
+- `roles/compute.osLogin`, or `roles/compute.osAdminLogin` when sudo access is required.
 
-Once access has been granted, confirm the role is assigned to your account:
+Exact bindings depend on organizational policy. Do not add broad project roles merely to make SSH work.
 
-```{.bash}
-gcloud projects get-iam-policy YOUR_GCP_PROJECT_ID \
-    --flatten="bindings[].members" \
-    --filter="bindings.members:YOUR_EMAIL@noaa.gov" \
-    --format="table(bindings.role)"
-```
+### 2. Use a Terminal SSH Session
 
-`roles/iap.tunnelResourceAccessor` should appear in the output. If it does not, follow up with your IT team or project admin.
-
-
-### Via the gcloud CLI
-
-The general pattern for connecting to a VM is:
+This is the normal method for administration, service checks, log review, and configuration changes:
 
 ```{.bash}
 gcloud compute ssh YOUR_VM_NAME \
-    --project=YOUR_GCP_PROJECT_ID \
-    --zone=YOUR_GCP_ZONE \
-    --tunnel-through-iap
+  --project=YOUR_GCP_PROJECT_ID \
+  --zone=YOUR_GCP_ZONE \
+  --tunnel-through-iap
 ```
 
-Port forwarding is added via `--ssh-flag` to make local services on the VM accessible in your browser. The `-4` flag forces IPv4, which avoids common IAP tunneling issues.
+If the connection fails, verify the active account and project, VM name and zone, IAP and OS Login roles, and the firewall allowance for IAP TCP forwarding.
 
-**ERDDAP VM** — forwards both the ERDDAP web interface (port 8080) and JupyterLab (port 8888):
+### 3. Optionally Forward Private Web Services
+
+SSH port forwarding makes a service bound to the VM available only through the active SSH connection. This is useful for viewing ERDDAP in a local browser before public routing is ready, or for reaching an optional browser-based tool without opening its port to the network.
+
+#### ERDDAP only
+
+The following maps local port `8081` to Tomcat port `8080` on the VM:
 
 ```{.bash}
 gcloud compute ssh YOUR_ERDDAP_VM_NAME \
-    --project=YOUR_GCP_PROJECT_ID \
-    --zone=YOUR_GCP_ZONE \
-    --tunnel-through-iap \
-    --ssh-flag="-4 -L 8080:localhost:8080 -L 8888:localhost:8888"
+  --project=YOUR_GCP_PROJECT_ID \
+  --zone=YOUR_GCP_ZONE \
+  --tunnel-through-iap \
+  --ssh-flag='-4 -L 8081:localhost:8080'
 ```
 
-Once connected, the ERDDAP interface is accessible at `http://localhost:8080/erddap` in your local browser (ERDDAP runs continuously via Tomcat). To use JupyterLab, start it on the VM first:
+While the SSH session remains open, visit `http://localhost:8081/erddap/`. If local port `8080` is free, `-L 8080:localhost:8080` is equally valid.
+
+#### JupyterLab when installed
+
+Jupyter is not required for ERDDAP. Some teams install it on a processing or development VM for interactive work. Start it on the VM's loopback address:
 
 ```{.bash}
-jupyter lab --no-browser --port=8888
+jupyter lab --no-browser --ip=127.0.0.1 --port=8888
 ```
 
-Jupyter will print a URL with a token to the terminal — copy and paste the `http://localhost:8888/lab?token=...` URL into your local browser.
-
-**Dataproc / processing VM** — forwards JupyterLab (port 8081 to avoid conflicts if the ERDDAP VM tunnel is already open):
+Then forward local port `8888` from another terminal:
 
 ```{.bash}
-gcloud compute ssh YOUR_DATAPROC_VM_NAME \
-    --project=YOUR_GCP_PROJECT_ID \
-    --zone=YOUR_GCP_ZONE \
-    --tunnel-through-iap \
-    --ssh-flag="-4 -L 8081:localhost:8081"
+gcloud compute ssh YOUR_VM_NAME \
+  --project=YOUR_GCP_PROJECT_ID \
+  --zone=YOUR_GCP_ZONE \
+  --tunnel-through-iap \
+  --ssh-flag='-4 -L 8888:localhost:8888'
 ```
 
-Once connected, start JupyterLab on the VM:
+Use the tokenized `http://localhost:8888/lab?...` URL printed by Jupyter.
+
+#### Combined tunnel
+
+When both services intentionally run on the same VM, one SSH session can forward both ports:
 
 ```{.bash}
-jupyter lab --no-browser --port=8081
+gcloud compute ssh YOUR_VM_NAME \
+  --project=YOUR_GCP_PROJECT_ID \
+  --zone=YOUR_GCP_ZONE \
+  --tunnel-through-iap \
+  --ssh-flag='-4 -L 8081:localhost:8080 -L 8888:localhost:8888'
 ```
 
-Jupyter will print a URL with a token to the terminal — copy and paste the `http://localhost:8081/lab?token=...` URL into your local browser.
+Omit any forwarding rule for a service that is not installed. Interactive processing can compete with ERDDAP for memory and CPU, so use a separate processing VM when the workload is substantial.
 
-### Via the GCP Console
+### 4. Use Browser-Based SSH
 
-For quick access without the CLI:
+Browser SSH is useful for a quick terminal session when the local CLI is unavailable:
 
-1. Go to the [Compute Engine VM instances](https://console.cloud.google.com/compute/instances) page in the GCP Console.
-2. Find your VM in the list.
-3. Click the **SSH** button in the Connect column.
+1. Open the [Google Cloud Console](https://console.cloud.google.com/).
+2. Select the correct project from the project selector at the top of the page.
+3. Open the navigation menu and choose **Compute Engine → VM instances**.
+4. Find the target VM in the **VM instances** table.
+5. In that row's **Connect** column, click **SSH**.
+6. Allow the browser terminal to open and complete any organization login prompt.
 
-The console opens a browser-based terminal connected to the VM through IAP. This is convenient for quick checks but does not support port forwarding or persistent sessions.
+Browser SSH provides terminal access. It does not create the local browser port forwards shown above and is not ideal for a long-running administrative session.

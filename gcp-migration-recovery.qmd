@@ -1,36 +1,65 @@
 ---
-title: "Migration, Upgrade, and Recovery"
+title: "Go-Live Checklist and Recovery Basics"
 ---
 
-### Optional: Data Preservation Snapshot
+Use this short chapter after the ERDDAP VM and public route work, just before directing users to the new service. It contains the minimum launch checks, not a complete disaster-recovery runbook.
 
-::: {.callout-note}
-Required only when rebuilding, migrating, or cloning an existing VM rather than deploying from a fresh image — for example, during machine family changes or environment rebuilds where the existing data and configuration need to be preserved.
-:::
+Snapshot restoration is not part of a normal initial installation. It becomes relevant when recovering a failed disk, cloning an existing configured system, or replacing a VM while preserving its prior system state.
 
-Before creating a snapshot, stop any active services writing to the disk to ensure filesystem consistency:
+### 1. Complete the Go-Live Check
 
-```{.bash}
-sudo systemctl stop tomcat
-```
+Confirm the following before launch:
 
-Create a persistent disk snapshot from Cloud Shell or another authenticated terminal:
-
-```{.bash}
-gcloud compute disks snapshot YOUR_INSTANCE_NAME \
-    --project=YOUR_GCP_PROJECT_ID \
-    --zone=YOUR_GCP_ZONE \
-    --snapshot-names=YOUR_INSTANCE_NAME-migration-backup
-```
-
-### Optional: Migration Snapshot Cleanup
-
-::: {.callout-note}
-Required only when rebuilding or migrating an existing VM using temporary manual snapshots. In many environments, temporary migration snapshots are retained for at least 24 hours before cleanup.
-:::
-
-After the new environment has been validated and operating normally, delete the migration snapshot:
+- the persistent data disk remounts after reboot;
+- the optional GCS/rclone mount returns automatically when used;
+- `tomcat-erddap.service` starts and the local status endpoint returns HTTP 200;
+- the load balancer reports the backend as healthy;
+- the public HTTPS status page returns HTTP 200 with the expected hostname and certificate;
+- a scheduled snapshot policy protects the intended boot and data disks;
+- `setup.xml`, `datasets.xml`, and custom ERDDAP content are stored in an access-controlled backup or repository;
+- an owner is assigned for service alerts, capacity, and upgrades.
 
 ```{.bash}
-gcloud compute snapshots delete YOUR_INSTANCE_NAME-migration-backup --quiet
+findmnt /mnt/disks/erddap-data
+systemctl is-active tomcat-erddap.service
+curl -fsSI http://127.0.0.1:8080/erddap/status.html
+
+# Bucket-backed deployments only; replace the mount path if customized
+findmnt /mnt/gcs/erddap-data
+systemctl is-active rclone-mount.service
 ```
+
+The ERDDAP VM setup chapter performs the detailed local, load-balancer, HTTPS, and reboot tests. This checklist confirms that none were skipped before launch.
+
+### 2. Know When to Create a Manual Snapshot
+
+Scheduled policies provide routine recovery points. Consider an additional manual snapshot immediately before a significant change such as:
+
+- an ERDDAP, Java, Tomcat, or operating-system upgrade;
+- a machine-family or disk migration;
+- a substantial configuration change;
+- replacement of an existing configured VM.
+
+Identify the actual disk resource names before snapshotting; a VM name is not necessarily a disk name:
+
+```{.bash}
+gcloud compute instances describe YOUR_ERDDAP_VM_NAME \
+  --project=YOUR_GCP_PROJECT_ID \
+  --zone=YOUR_GCP_ZONE \
+  --format='table(disks.deviceName,disks.source.basename(),disks.boot)'
+```
+
+Stop ERDDAP and flush filesystem writes before an application-consistent manual snapshot:
+
+```{.bash}
+sudo systemctl stop tomcat-erddap
+sudo sync
+```
+
+Create and label the snapshots using the organization's approved GCP process, then restart ERDDAP and repeat the health checks. Do not leave the service stopped if snapshot creation fails.
+
+### 3. Treat Restoration as a Separate Procedure
+
+Restoration normally creates a replacement disk or VM in a controlled environment, followed by filesystem, service, dataset, and public-route validation. Do not attach one writable restored data disk to two VMs unless the storage type and application design explicitly support multi-writer access.
+
+Document the detailed restore and rollback procedure before the first major upgrade. Test it periodically according to the service's availability and records requirements. Those operational procedures may be maintained privately when they contain project names, contacts, or environment-specific recovery details.

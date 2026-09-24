@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Project Architecture – SWFSC ERDDAP Cloud Migration</title>
+<title>Project Architecture – ERDDAP on Google Cloud</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,8 +30,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./mh1-processor.html" rel="next">
-<link href="./gcp-templates.html" rel="prev">
+<link href="./gcp-infrastructure.html" rel="next">
+<link href="./gcp-setup.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -84,7 +84,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -103,7 +103,7 @@ ul.task-list li input[type="checkbox"] {
       <img src="./assets/logo.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
       </a>
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">SWFSC ERDDAP Cloud Migration</a> 
+      <a href="./">ERDDAP on Google Cloud</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -121,7 +121,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Cloud Setup</span></a>
+ <span class="menu-text">Deploy ERDDAP on GCP</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -130,6 +130,11 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./gcp-setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Setup Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./architecture.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Project Architecture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -149,22 +154,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./gcp-processing-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Processing VM Setup</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./gcp-migration-recovery.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Migration, Upgrade, and Recovery</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GCP Data Processing Templates</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./architecture.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Project Architecture</span></a>
+  <a href="./gcp-migration-recovery.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Go-Live Checklist and Recovery Basics</span></a>
   </div>
 </li>
       </ul>
@@ -172,12 +162,33 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Workflows</span></a>
+ <span class="menu-text">Optional Processing Infrastructure</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-processing-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Optional Processing VM Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GCP Data Processing Templates</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Workflow Examples</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./mh1-processor.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></a>
@@ -222,13 +233,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Presentations</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Project History</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./erddap-cloud-migration-presentations.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ERDDAP Cloud Migration Presentations</span></a>
@@ -238,13 +249,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: ascat</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: ascat</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/ascat/ascat_c_cdl.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascat_c.cdl</span></a>
@@ -314,13 +325,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: charm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: charm</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/charm/charm_data_process_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_data_process_functions.py</span></a>
@@ -445,13 +456,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: crw</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: crw</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/crw/control_crw_daily.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_crw_daily.py</span></a>
@@ -496,13 +507,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mh1-primprod</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mh1-primprod</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mh1-primprod/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -552,13 +563,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mh1-processor</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mh1-processor</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mh1-processor/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -633,13 +644,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mur-sst</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mur-sst</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mur-sst/Canny1.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Canny1.py</span></a>
@@ -724,13 +735,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: nsidc</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: nsidc</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/nsidc/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yaml</span></a>
@@ -775,13 +786,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: viirs-netpp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: viirs-netpp</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/viirs-netpp/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -838,7 +849,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- main -->
 <main class="content column-page-right" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./architecture.html"><span class="chapter-title">Project Architecture</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">Project Architecture</span></h1>
 </div>
@@ -857,34 +868,197 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This chapter describes the high-level cloud architecture used for the SWFSC ERDDAP migration. The design separates data serving, data processing, storage, scheduling, deployment, and secret management into distinct components. That separation makes the system easier to maintain, rebuild, monitor, and extend as additional workflows are migrated.</p>
-<p>At a high level, the architecture includes:</p>
+<p>This chapter describes a reference architecture for running ERDDAP on Google Cloud. The design separates public data serving, persistent state, source data, processing, and external routing so each component can be secured, scaled, rebuilt, and maintained independently.</p>
+<section id="core-and-optional-components" class="level2">
+<h2 class="anchored" data-anchor-id="core-and-optional-components">Core and optional components</h2>
+<table class="component-table">
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 20%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th>
+Component
+</th>
+<th>
+Requirement
+</th>
+<th>
+Purpose
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+ERDDAP VM
+</td>
+<td>
+Required
+</td>
+<td>
+Runs Java, Tomcat, and ERDDAP on a private Compute Engine instance.
+</td>
+</tr>
+<tr>
+<td>
+Persistent data disk
+</td>
+<td>
+Required
+</td>
+<td>
+Stores ERDDAP’s working directory, logs, decompressed files, and optional rclone cache independently of the boot disk.
+</td>
+</tr>
+<tr>
+<td>
+Infrastructure as code (Terraform)
+</td>
+<td>
+Strongly recommended
+</td>
+<td>
+Makes VM, disk, IAM, bucket, and snapshot configuration reviewable and reproducible. Terraform supports multiple cloud providers; this guide uses its Google Cloud provider and GCP-specific resources.
+</td>
+</tr>
+<tr>
+<td>
+HTTPS load balancer
+</td>
+<td>
+Required for the public-service design shown here
+</td>
+<td>
+Performs health checks, terminates HTTPS, and routes requests to the private backend.
+</td>
+</tr>
+<tr>
+<td>
+GCS data bucket and rclone mount
+</td>
+<td>
+Optional
+</td>
+<td>
+Provides a read-only filesystem view of file-backed datasets stored in object storage.
+</td>
+</tr>
+<tr>
+<td>
+Processing VM
+</td>
+<td>
+Optional
+</td>
+<td>
+Supports interactive development, backfills, validation, and compute-heavy processing without competing with the serving VM.
+</td>
+</tr>
+<tr>
+<td>
+Cloud Run, Scheduler, Artifact Registry, and Secret Manager
+</td>
+<td>
+Optional
+</td>
+<td>
+Support scheduled containerized data-processing workflows.
+</td>
+</tr>
+</tbody>
+</table>
+<p>ERDDAP can serve remote HTTP, THREDDS, or other ERDDAP sources without a local data bucket. Do not add a bucket, large cache disk, or processing environment unless the catalog and workload require them.</p>
+</section>
+<section id="serving-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="serving-patterns">Serving patterns</h2>
+<section id="remote-source-erddap" class="level3">
+<h3 class="anchored" data-anchor-id="remote-source-erddap">Remote-source ERDDAP</h3>
+<p>In the simplest pattern, ERDDAP reads from upstream network services. The VM still needs a persistent disk for ERDDAP state and logs, but it may not need a GCS data bucket or rclone.</p>
+<p>This pattern has fewer components, but public availability and dataset-load time depend on the upstream services.</p>
+</section>
+<section id="file-backed-erddap" class="level3">
+<h3 class="anchored" data-anchor-id="file-backed-erddap">File-backed ERDDAP</h3>
+<p>For large local archives, source files are stored in GCS and mounted read-only into the ERDDAP VM. ERDDAP reads a normal filesystem path while rclone manages object retrieval and a persistent VFS cache.</p>
+<p>This pattern provides a durable shared data layer and keeps source data outside the VM, but it requires deliberate cache sizing, mount monitoring, service ordering, and bucket IAM.</p>
+</section>
+<section id="processing-and-serving" class="level3">
+<h3 class="anchored" data-anchor-id="processing-and-serving">Processing and serving</h3>
+<p>When the team also generates data products, processing systems write production-ready files to storage and ERDDAP serves them independently. Processing may run on a VM, Cloud Run Jobs, or another managed service. A processing failure should not stop the ERDDAP service itself.</p>
+</section>
+</section>
+<section id="design-principles" class="level2">
+<h2 class="anchored" data-anchor-id="design-principles">Design principles</h2>
 <ul>
-<li>a dedicated ERDDAP VM for public data serving;</li>
-<li>attached disks for ERDDAP cache, logs, and local working directories;</li>
-<li>Google Cloud Storage buckets for production and staging data;</li>
-<li>processing VMs for heavier jobs, testing, and backfills;</li>
-<li>Cloud Run Jobs for operational containerized workflows;</li>
-<li>Artifact Registry for container images;</li>
-<li>Cloud Scheduler for recurring execution;</li>
-<li>Secret Manager for runtime credentials; and</li>
-<li>Terraform for managing the core infrastructure.</li>
+<li>Keep the ERDDAP VM private; expose the service through the load balancer rather than a public VM address.</li>
+<li>Store ERDDAP working state on a persistent disk that survives VM replacement.</li>
+<li>Treat the boot disk as replaceable.</li>
+<li>Mount cloud source data read-only on the serving VM.</li>
+<li>Give the ERDDAP service account read-only object access unless it has a separately justified write responsibility.</li>
+<li>Keep scientific processing off the serving VM whenever practical.</li>
+<li>Manage infrastructure and configuration through reviewed source control.</li>
+<li>Test locally before adding load-balancer, DNS, and certificate dependencies.</li>
 </ul>
-<section id="design-pattern" class="level2">
-<h2 class="anchored" data-anchor-id="design-pattern">Design pattern</h2>
-<p>The migration uses a decoupled architecture. Processing systems generate or transform datasets and write outputs to cloud storage. ERDDAP then serves those datasets from a production bucket mounted into the ERDDAP VM. This avoids tightly coupling the public data-serving system to any single workflow implementation.</p>
-<p>The main operating pattern is:</p>
-<ol type="1">
-<li>workflow code is packaged into containers;</li>
-<li>images are stored in Artifact Registry;</li>
-<li>Cloud Run Jobs or processing VMs execute workflows;</li>
-<li>outputs are written to work or production buckets;</li>
-<li>ERDDAP reads production-ready files from the mounted production bucket; and</li>
-<li>updated datasets are served publicly through ERDDAP.</li>
-</ol>
+</section>
+<section id="decisions-before-deployment" class="level2">
+<h2 class="anchored" data-anchor-id="decisions-before-deployment">Decisions before deployment</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Decision</th>
+<th>Questions to answer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Catalog model</td>
+<td>Are datasets remote, file-backed, or mixed?</td>
+</tr>
+<tr class="even">
+<td>Initial capacity</td>
+<td>What memory, boot disk, persistent disk, and cache sizes are justified by the expected catalog?</td>
+</tr>
+<tr class="odd">
+<td>Data storage</td>
+<td>Is a GCS bucket required? Who creates it, owns it, and writes to it?</td>
+</tr>
+<tr class="even">
+<td>Identity</td>
+<td>Which service account runs the VM, and what is the minimum required IAM?</td>
+</tr>
+<tr class="odd">
+<td>Networking</td>
+<td>Which VPC, subnet, proxy-only subnet, firewall policy, and private address will be used?</td>
+</tr>
+<tr class="even">
+<td>Public routing</td>
+<td>Who owns the load balancer, health check, certificate, DNS, and external routing?</td>
+</tr>
+<tr class="odd">
+<td>Infrastructure ownership</td>
+<td>Which Terraform state manages each resource? Are shared platform resources intentionally outside this repository?</td>
+</tr>
+<tr class="even">
+<td>Recovery</td>
+<td>Which disks are protected by snapshot policies, and who tests restoration?</td>
+</tr>
+<tr class="odd">
+<td>Operations</td>
+<td>Who receives alerts, reviews failed datasets, manages upgrades, and maintains <code>setup.xml</code> and <code>datasets.xml</code>?</td>
+</tr>
+</tbody>
+</table>
+<p>Resources may share one GCP project without sharing one Terraform state. A team’s Terraform should manage only the resources that team owns. Shared load-balancer components can be managed separately as long as ownership and interfaces are documented.</p>
 </section>
 <section id="architecture-diagram" class="level2">
 <h2 class="anchored" data-anchor-id="architecture-diagram">Architecture diagram</h2>
+<p>The SWFSC implementation includes both the required serving components and optional processing components:</p>
 <!-- GCP Architecture — include with {{< include gcp-architecture.html >}} -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -1170,8 +1344,8 @@ ul.task-list li input[type="checkbox"] {
 .ga-right{
   position:absolute;
   top:0;
-  right:0;
-  transform:translate(50%, -50px);
+  right:12px;
+  transform:translate(0, -50px);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -1574,16 +1748,16 @@ const D={
     b:"Three required components: the load balancer (forwarding rules, DoD certificates, proxy subnets, firewall rules), a PSC NAT subnet (one per service attachment), and a PSC Service Attachment (filed via SCR, created by the network team). One load balancer is shared across all apps in the project — PSC is always one-to-one per service. All traffic appears to originate from the PSC NAT subnet, so any IP restrictions must be communicated to the network team in the SCR.",
     n:"Google's CA cannot issue certificates for NOAA domains. DoD certificates must be requested separately and uploaded manually via Certificate Manager in the GCP Console — this step cannot be automated through Terraform."},
   erddap:{t:"ERDDAP VM",s:"GCP · Compute Engine",
-    b:"Dedicated solely to serving — no data processing runs here. The BIG ERDDAP at coastwatch.pfeg.noaa.gov hosts 3,112 datasets (89% gridded), has served 78,281 unique users and 1.41M requests since last restart. Machine sizing follows on-prem RAM: e.g. a 377 GB on-prem server maps to a <code>c4-highmem-48</code>. Modern C4 Intel cores substantially outperform the legacy Xeon Platinum CPUs being replaced.",
+    b:"Dedicated primarily to serving ERDDAP. Separating sustained processing workloads prevents them from competing with public requests for memory, CPU, and disk I/O. Machine and disk sizing should follow the catalog, data-source pattern, and measured demand rather than copying this example unchanged.",
     n:"The strict separation of serving and processing is a key architectural decision. ERDDAP is memory-bound for subsetting operations; co-locating processing jobs would contend for RAM during peak request loads."},
   edisk:{t:"ERDDAP Hyperdisk",s:"GCP · Hyperdisk Balanced",
     b:"Stores ERDDAP's <code>bigParentDirectory</code> — the working directory, dataset index, response cache, and request logs. Chosen over standard persistent disk for higher I/O throughput needed with large NetCDF workloads. A standard symlink (<code>/data</code>) provides a consistent path so ERDDAP configuration doesn't need to change between environments.",
     n:null},
   rclone:{t:"rclone mount",s:"rclone / FUSE",
-    b:"Mounts the GCS production bucket as a local filesystem path (<code>/mnt/gcs/erd</code>) inside the ERDDAP VM using a VFS layer. The mount is read-only to protect source data. Local NVMe caching (~500 GB) handles ERDDAP's range-request access pattern on NetCDF files. The mount lifecycle is managed by a systemd service that auto-starts on boot and restarts on failure.",
+    b:"Mounts the GCS production bucket as a local filesystem path such as <code>/mnt/gcs/erddap-data</code> inside the ERDDAP VM using a VFS layer. The mount is read-only to protect source data. A cache on the persistent data disk supports ERDDAP's range-request access pattern on NetCDF files. A systemd service manages startup and recovery.",
     n:"GCSFuse was evaluated but rclone was chosen for better compatibility with ERDDAP's random-access read patterns on large NetCDF files."},
   vm:{t:"Processing VM",s:"GCP · Compute Engine C4 series",
-    b:"Used for heavy, long-running, or memory-intensive processing: backfills, data reprocessing, and jobs that exceed Cloud Run's limits. Follows a standardised directory layout (<code>/home/erd/</code>) with <code>config/</code>, <code>data/</code>, <code>scripts/</code>, <code>src/</code>, and <code>templates/</code> subdirectories — enabling predictable pathing, environment reproducibility, and seamless handoff between team members.",
+    b:"Used for heavy, long-running, or memory-intensive processing such as backfills, data reprocessing, and jobs that exceed Cloud Run limits. Its scientific software and project layout are maintained separately from the ERDDAP serving setup.",
     n:"The template-dataproc GitHub template encodes this structure so new VMs start from a consistent baseline. Legacy code from 2014 with hard-coded paths and machine-specific assumptions has been refactored to use config-driven logic as part of the migration."},
   vmdisk:{t:"Processing Hyperdisk · 4 TB",s:"GCP · Hyperdisk Balanced",
     b:"High-throughput scratch disk mounted at <code>/mnt/disks/xyz-data</code> and symlinked to <code>/data</code> for workflow consistency. Holds temporary files, intermediate composites, and large working datasets during processing. Final validated outputs are written to the GCS production bucket; in-progress work stays on the work disk or GCS work bucket.",
@@ -1609,11 +1783,11 @@ const D={
   tf:{t:"Terraform",s:"HashiCorp Terraform",
     b:"All infrastructure is defined as version-controlled code across four files: <code>main.tf</code> (providers, project config, remote state in GCS), <code>instance.tf</code> (ERDDAP and processing VMs), <code>bucket.tf</code> (storage + IAM), and <code>load_balancer.tf</code> (external access, SSL, health checks). This replaced manual GCP Console setup, ensuring environments are reproducible from dev to prod and changes are auditable.",
     n:"DoD certificates are the one manual step — Certificate Manager doesn't support non-Google CAs via Terraform, so the certificate chain and private key must be uploaded through the Console."},
-  users:{t:"External End Users",s:"Public · ~78K unique users",
-    b:"Scientists, researchers, and automated systems worldwide accessing ERDDAP over HTTPS. The BIG ERDDAP has served 78,281 unique users and 1.41 million requests since last restart, with dataset content spanning sea surface temperature, ocean color, acoustic monitoring, MODIS, VIIRS, Argo floats, marine mammals, and more. All traffic enters only through the load balancer.",
+  users:{t:"External End Users",s:"Public ERDDAP clients",
+    b:"Scientists, researchers, applications, and automated systems access ERDDAP over HTTPS. Public traffic enters through the load balancer rather than connecting directly to the private VM.",
     n:null},
-  dev:{t:"Scientist / Developer",s:"Internal · SWFSC team",
-    b:"The SWFSC team migrating and maintaining ERDDAP on GCP — Jonathan Sherman, Sunny Hospital, Dale Robinson, Cara Wilson, Madi Richardson, Roy Mendelssohn, and Lynn Dewitt. They manage Terraform infrastructure, refactor legacy processing scripts (some dating to 2014), build Cloud Run containers, and develop new data workflows. Migration is driven by a NOAA NMFS mandate to move all data to GCP by end of 2026, with on-prem server support ending March 2027.",
+  dev:{t:"Scientist / Developer",s:"Authorized service team",
+    b:"Authorized team members administer infrastructure, maintain ERDDAP configuration, and operate any optional data-processing workflows. Their access follows IAP, OS Login, service-account, and least-privilege IAM controls.",
     n:null},
 };
 function gm(k){
@@ -1638,10 +1812,7 @@ function gc(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')gc();});
 </script>
 
-</section>
-<section id="why-this-structure-works" class="level2">
-<h2 class="anchored" data-anchor-id="why-this-structure-works">Why this structure works</h2>
-<p>This design keeps serving, processing, and storage responsibilities separate. The ERDDAP server remains focused on data access and public distribution, while workflows can evolve independently as VM-based or serverless jobs. Google Cloud Storage provides the shared data layer between systems, and Terraform keeps the infrastructure reproducible and maintainable.</p>
+<p>Use the diagram as a reference, not as a requirement to deploy every component.</p>
 
 
 </section>
@@ -2051,13 +2222,13 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')gc();});
   </script>
 <nav class="page-navigation column-page-right">
   <div class="nav-page nav-page-previous">
-      <a href="./gcp-templates.html" class="pagination-link" aria-label="GCP Data Processing Templates">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">GCP Data Processing Templates</span></span>
+      <a href="./gcp-setup.html" class="pagination-link" aria-label="Setup Overview">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Setup Overview</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./mh1-processor.html" class="pagination-link" aria-label="MH1 / MPOC / MPIC Processor">
-        <span class="nav-page-text"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./gcp-infrastructure.html" class="pagination-link" aria-label="Cloud Infrastructure Setup">
+        <span class="nav-page-text"><span class="chapter-title">Cloud Infrastructure Setup</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

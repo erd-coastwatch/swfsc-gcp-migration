@@ -212,7 +212,14 @@ tbody tr:last-child td {
 td:first-child {
   font-weight: 600;
   color: #164a73;
-  white-space: nowrap;
+}
+
+.component-table {
+  table-layout: fixed;
+}
+
+.component-table td:first-child {
+  white-space: normal;
 }
 
 /* ======================

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Cloud Infrastructure Setup – SWFSC ERDDAP Cloud Migration</title>
+<title>Cloud Infrastructure Setup – ERDDAP on Google Cloud</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -66,7 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./gcp-vm-access.html" rel="next">
-<link href="./gcp-setup.html" rel="prev">
+<link href="./architecture.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -119,7 +119,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./gcp-infrastructure.html"><span class="chapter-title">Cloud Infrastructure Setup</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./gcp-infrastructure.html"><span class="chapter-title">Cloud Infrastructure Setup</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -138,7 +138,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <img src="./assets/logo.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
       </a>
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">SWFSC ERDDAP Cloud Migration</a> 
+      <a href="./">ERDDAP on Google Cloud</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -156,7 +156,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Cloud Setup</span></a>
+ <span class="menu-text">Deploy ERDDAP on GCP</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -165,6 +165,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./gcp-setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Setup Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./architecture.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Project Architecture</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -184,22 +189,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./gcp-processing-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Processing VM Setup</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./gcp-migration-recovery.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Migration, Upgrade, and Recovery</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GCP Data Processing Templates</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./architecture.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Project Architecture</span></a>
+  <a href="./gcp-migration-recovery.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Go-Live Checklist and Recovery Basics</span></a>
   </div>
 </li>
       </ul>
@@ -207,12 +197,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Workflows</span></a>
+ <span class="menu-text">Optional Processing Infrastructure</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-processing-vm.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Optional Processing VM Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GCP Data Processing Templates</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Workflow Examples</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./mh1-processor.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></a>
@@ -257,13 +268,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Presentations</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Project History</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./erddap-cloud-migration-presentations.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ERDDAP Cloud Migration Presentations</span></a>
@@ -273,13 +284,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: ascat</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: ascat</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/ascat/ascat_c_cdl.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">ascat_c.cdl</span></a>
@@ -349,13 +360,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: charm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: charm</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/charm/charm_data_process_functions.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">charm_data_process_functions.py</span></a>
@@ -480,13 +491,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: crw</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: crw</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/crw/control_crw_daily.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">control_crw_daily.py</span></a>
@@ -531,13 +542,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mh1-primprod</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mh1-primprod</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mh1-primprod/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -587,13 +598,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mh1-processor</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mh1-processor</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mh1-processor/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -668,13 +679,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: mur-sst</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: mur-sst</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/mur-sst/Canny1.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Canny1.py</span></a>
@@ -759,13 +770,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: nsidc</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: nsidc</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/nsidc/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yaml</span></a>
@@ -810,13 +821,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
- <span class="menu-text">Code: viirs-netpp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">SWFSC Code Example: viirs-netpp</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./code-pages/viirs-netpp/config.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">config.yml</span></a>
@@ -874,16 +885,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#access-the-infrastructure-configuration" id="toc-access-the-infrastructure-configuration" class="nav-link active" data-scroll-target="#access-the-infrastructure-configuration">1. Access the Infrastructure Configuration</a></li>
-  <li><a href="#review-and-deploy-infrastructure-with-terraform" id="toc-review-and-deploy-infrastructure-with-terraform" class="nav-link" data-scroll-target="#review-and-deploy-infrastructure-with-terraform">2. Review and Deploy Infrastructure with Terraform</a></li>
-  <li><a href="#deploy-infrastructure" id="toc-deploy-infrastructure" class="nav-link" data-scroll-target="#deploy-infrastructure">3. Deploy Infrastructure</a></li>
+  <li><a href="#establish-source-and-state-ownership" id="toc-establish-source-and-state-ownership" class="nav-link active" data-scroll-target="#establish-source-and-state-ownership">1. Establish Source and State Ownership</a></li>
+  <li><a href="#prepare-the-terraform-workstation" id="toc-prepare-the-terraform-workstation" class="nav-link" data-scroll-target="#prepare-the-terraform-workstation">2. Prepare the Terraform Workstation</a></li>
+  <li><a href="#organize-the-configuration" id="toc-organize-the-configuration" class="nav-link" data-scroll-target="#organize-the-configuration">3. Organize the Configuration</a></li>
+  <li><a href="#configure-providers-backend-and-inputs" id="toc-configure-providers-backend-and-inputs" class="nav-link" data-scroll-target="#configure-providers-backend-and-inputs">4. Configure Providers, Backend, and Inputs</a></li>
+  <li><a href="#define-storage-and-least-privilege-iam" id="toc-define-storage-and-least-privilege-iam" class="nav-link" data-scroll-target="#define-storage-and-least-privilege-iam">5. Define Storage and Least-Privilege IAM</a></li>
+  <li><a href="#define-the-vm-and-its-disks" id="toc-define-the-vm-and-its-disks" class="nav-link" data-scroll-target="#define-the-vm-and-its-disks">6. Define the VM and Its Disks</a></li>
+  <li><a href="#initialize-review-and-apply" id="toc-initialize-review-and-apply" class="nav-link" data-scroll-target="#initialize-review-and-apply">7. Initialize, Review, and Apply</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Cloud Setup</a></li><li class="breadcrumb-item"><a href="./gcp-infrastructure.html"><span class="chapter-title">Cloud Infrastructure Setup</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./gcp-infrastructure.html"><span class="chapter-title">Cloud Infrastructure Setup</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">Cloud Infrastructure Setup</span></h1>
 </div>
@@ -902,11 +917,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This section covers the Terraform-managed infrastructure layer: virtual machines, storage buckets, networking, service accounts, IAM permissions, and supporting cloud services.</p>
-<section id="access-the-infrastructure-configuration" class="level3">
-<h3 class="anchored" data-anchor-id="access-the-infrastructure-configuration">1. Access the Infrastructure Configuration</h3>
-<p>Before creating or modifying any VM environment, access the source repository that contains the Terraform configuration. The original SWFSC deployment used Google Cloud Source Repositories, but Cloud Source Repositories is unavailable to new customers. Terraform source files can instead be stored in GitHub, Google Secure Source Manager, or another controlled Git repository.</p>
-<p>The source repository and Terraform state backend are separate:</p>
+<p>This chapter shows how to define the GCP resources around ERDDAP with Terraform. Terraform is an infrastructure-as-code tool that supports multiple cloud providers; the examples here use the Google Cloud provider and are therefore GCP-specific.</p>
+<p>The code blocks are sanitized templates. They are not a complete deployment that should be applied unchanged.</p>
+<section id="establish-source-and-state-ownership" class="level3">
+<h3 class="anchored" data-anchor-id="establish-source-and-state-ownership">1. Establish Source and State Ownership</h3>
+<p>Keep the deployable Terraform configuration in one controlled Git repository so future maintainers can find its history, owners, and review process. A public documentation repository may contain sanitized examples, while the configuration containing real project names and operational values normally belongs in a private organization repository.</p>
+<p>Terraform source and Terraform state are different assets:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -917,248 +933,291 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="header">
 <th>Item</th>
 <th>Purpose</th>
-<th>Example location</th>
+<th>Recommended location</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Terraform source</td>
-<td>Reviewable <code>.tf</code> files and Git history</td>
-<td>GitHub, Secure Source Manager, or an existing Cloud Source Repository</td>
+<td>Versioned <code>.tf</code> files, examples, and review history</td>
+<td>Controlled GitHub or Google Secure Source Manager repository</td>
 </tr>
 <tr class="even">
 <td>Terraform state</td>
-<td>Records the cloud resources managed by Terraform</td>
-<td>A versioned, access-controlled GCS bucket configured in <code>backend "gcs"</code></td>
+<td>Records the resources managed by this configuration</td>
+<td>Dedicated, access-controlled GCS backend bucket</td>
 </tr>
 </tbody>
 </table>
-<p>Terraform does not require its source files to live in Google Cloud. The files only need to be available on the workstation, Cloud Shell session, or CI runner where Terraform executes.</p>
-<ol type="1">
-<li>Log into the <a href="https://console.cloud.google.com">Google Cloud Console</a>.</li>
-<li>Start Cloud Shell by clicking the terminal icon (<code>&gt;_</code>) in the top-right corner.</li>
-<li>Clone the infrastructure repository using the URL for the selected Git provider. For an organization that already has access to Cloud Source Repositories:</li>
-</ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://source.developers.google.com/p/YOUR_GCP_PROJECT_ID/r/YOUR_TERRAFORM_REPO</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace with the appropriate infrastructure repository for your environment</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> YOUR_TERRAFORM_REPO</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The repository contains the Terraform configuration files used to define VM infrastructure, storage resources, networking, and related cloud resources.</p>
-<p>For GitHub or Secure Source Manager, replace the clone URL above with the repository’s HTTPS or SSH clone URL. Do not copy the <code>.terraform/</code> working directory or local state files between systems.</p>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Using this configuration outside the SWFSC GCP project
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The Terraform examples in this guide are templates, not a portable deployment that can be applied unchanged. Users deploying into another GCP project must provide their own:</p>
+<p>Do not copy <code>.terraform/</code>, local state files, saved plan files, or credentials between systems. Do not let two unrelated Terraform configurations manage the same resource.</p>
+<p>Before continuing, identify who owns the following:</p>
 <ul>
-<li>GCP project, region, and zone</li>
-<li>Terraform state bucket</li>
-<li>service accounts and IAM permissions</li>
-<li>VPC network and subnet</li>
-<li>approved boot image or existing snapshot</li>
-<li>snapshot policy</li>
-<li>bucket and disk names</li>
-<li>NOAA-required labels and organization-policy settings</li>
+<li>GCP project, billing, APIs, quotas, and organization policies;</li>
+<li>Terraform repository and state bucket;</li>
+<li>service accounts and IAM bindings;</li>
+<li>VPC, subnet, firewall, and load-balancer resources;</li>
+<li>approved boot images and snapshot policies;</li>
+<li>required organizational labels.</li>
 </ul>
-<p>Do not initialize Terraform against the SWFSC state bucket or apply the configuration using SWFSC project values. Replace the project-specific values first, then run <code>terraform init</code>, <code>terraform validate</code>, and <code>terraform plan</code> in a separate state backend.</p>
-</div>
-</div>
 </section>
-<section id="review-and-deploy-infrastructure-with-terraform" class="level3">
-<h3 class="anchored" data-anchor-id="review-and-deploy-infrastructure-with-terraform">2. Review and Deploy Infrastructure with Terraform</h3>
-<p>The Terraform configuration is organized across three main files.</p>
-<p><strong><code>main.tf</code></strong> defines the Terraform backend, required provider, and shared project-wide variables including GCP project ID, region, zone, NOAA metadata labels, and environment name. These shared variables are referenced throughout <code>bucket.tf</code> and <code>instance.tf</code> to avoid hard-coding configuration values across multiple files.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PROJECT STANDARDS &amp; PROVIDER CONFIGURATION</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace backend bucket, project variables, bucket names, and service accounts</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># with the appropriate values for your deployment.</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>terraform {</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  backend <span class="st">"gcs"</span> {</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    bucket <span class="op">=</span> <span class="st">"tf-local-swfsc-prod"</span>   <span class="co"># Terraform remote state backend bucket</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    prefix <span class="op">=</span> <span class="st">"terraform/state"</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  required_providers { google <span class="op">=</span> { source <span class="op">=</span> <span class="st">"hashicorp/google"</span> } }</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># GLOBAL VARIABLES</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"project-id"</span>      { default <span class="op">=</span> <span class="st">"YOUR_GCP_PROJECT_ID"</span> }</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"system-id"</span>       { default <span class="op">=</span> <span class="st">"YOUR_SYSTEM_ID"</span> }</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"lineoffice"</span>      { default <span class="op">=</span> <span class="st">"YOUR_LINE_OFFICE"</span> }</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"taskorder"</span>       { default <span class="op">=</span> <span class="st">"YOUR_TASK_ORDER"</span> }</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"billing-id"</span>      { default <span class="op">=</span> <span class="st">"YOUR_BILLING_ID"</span> }</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"application-id"</span>  { default <span class="op">=</span> <span class="st">"YOUR_APPLICATION_ID"</span> }</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"stakeholder"</span>     { default <span class="op">=</span> <span class="st">"YOUR_STAKEHOLDER"</span> }</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"environment"</span>     { default <span class="op">=</span> <span class="st">"dev"</span> }</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"region1"</span>         { default <span class="op">=</span> <span class="st">"us-east4"</span> }</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>variable <span class="st">"zone1"</span>           { default <span class="op">=</span> <span class="st">"us-east4-a"</span> }</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong><code>bucket.tf</code></strong> defines the GCS buckets used by the environment and assigns IAM permissions to the service accounts that need access. In many deployments the required buckets may already exist — review the bucket names, IAM bindings, and service accounts to confirm they match the environment. Copy and edit the block below when creating a new bucket:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_storage_bucket"</span> <span class="st">"erddap_bucket"</span> {</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  name                        <span class="op">=</span> <span class="st">"YOUR_ERDDAP_BUCKET_NAME"</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  project                     <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  location                    <span class="op">=</span> var.region1</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  force_destroy               <span class="op">=</span> true   <span class="co"># Common in dev/testing; prefer false in production</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  uniform_bucket_level_access <span class="op">=</span> true</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  labels <span class="op">=</span> {</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    environment        <span class="op">=</span> var.environment</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    noaa_fismaid       <span class="op">=</span> var.system<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    noaa_lineoffice    <span class="op">=</span> var.lineoffice</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    noaa_taskorder     <span class="op">=</span> var.taskorder</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    noaa_environment   <span class="op">=</span> var.environment</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    noaa_applicationid <span class="op">=</span> var.application<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    noaa_project_id    <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  hierarchical_namespace { enabled <span class="op">=</span> true }</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  lifecycle_rule {</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    condition { num_newer_versions <span class="op">=</span> <span class="dv">5</span> }</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    action    { <span class="bu">type</span> <span class="op">=</span> <span class="st">"Delete"</span> }</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="bu">locals</span> {</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  buckets <span class="op">=</span> [</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"YOUR_PROCESSING_OR_DATA_BUCKET_NAME"</span>,</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"YOUR_ERDDAP_BUCKET_NAME"</span>,</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  ]</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_storage_bucket_iam_member"</span> <span class="st">"vm_service_account_object_admins"</span> {</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  for_each <span class="op">=</span> toset(local.buckets)</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  bucket   <span class="op">=</span> each.value</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  role     <span class="op">=</span> <span class="st">"roles/storage.objectAdmin"</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  member   <span class="op">=</span> <span class="st">"serviceAccount:YOUR_VM_SERVICE_ACCOUNT_EMAIL"</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_storage_bucket_iam_member"</span> <span class="st">"cloud_run_service_account_object_admins"</span> {</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  for_each <span class="op">=</span> toset(local.buckets)</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  bucket   <span class="op">=</span> each.value</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  role     <span class="op">=</span> <span class="st">"roles/storage.objectAdmin"</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  member   <span class="op">=</span> <span class="st">"serviceAccount:YOUR_CLOUD_RUN_SERVICE_ACCOUNT_EMAIL"</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If you add a new bucket and IAM is applied through <code>locals.buckets</code>, add the new bucket name to that list as well.</p>
-<p><strong><code>instance.tf</code></strong> defines all VMs in the project, including persistent data disks, machine type, boot disk, networking, service account, metadata, labels, and snapshot policy attachments. Copy and edit the blocks below when deploying a new ERDDAP VM. For additional machine type options, refer to the <a href="https://cloud.google.com/compute/docs/machine-resource">Google Cloud Compute Engine machine type documentation</a>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ERDDAP data disk</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_compute_disk"</span> <span class="st">"erddap_data_disk"</span> {</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"YOUR_ERDDAP_DATA_DISK_NAME"</span>   <span class="co"># Example: erddap-data-disk</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> var.zone1</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span>    <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span>            <span class="co"># Recommended for high I/O NetCDF workloads</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  size    <span class="op">=</span> <span class="dv">4096</span>                            <span class="co"># Disk size in GB (4 TB)</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># ERDDAP VM</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_compute_instance"</span> <span class="st">"erddap_vm"</span> {</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  name                  <span class="op">=</span> <span class="st">"YOUR_ERDDAP_VM_NAME"</span>   <span class="co"># Example: erd-erddap</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  project               <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  zone                  <span class="op">=</span> var.zone1</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  machine_type          <span class="op">=</span> <span class="st">"c4-highmem-16"</span>          <span class="co"># High-memory C4 instance for ERDDAP</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  allow_stopping_for_update <span class="op">=</span> true</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  metadata <span class="op">=</span> {</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    block<span class="op">-</span>project<span class="op">-</span>ssh<span class="op">-</span>keys <span class="op">=</span> true</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    enable<span class="op">-</span>osconfig        <span class="op">=</span> true</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  labels <span class="op">=</span> {</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    environment        <span class="op">=</span> var.environment</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    noaa_fismaid       <span class="op">=</span> var.system<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    noaa_lineoffice    <span class="op">=</span> var.lineoffice</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    noaa_taskorder     <span class="op">=</span> var.taskorder</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    noaa_environment   <span class="op">=</span> var.environment</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    noaa_applicationid <span class="op">=</span> var.application<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    noaa_project_id    <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    role               <span class="op">=</span> <span class="st">"erddap-server"</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  boot_disk {</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    device_name <span class="op">=</span> <span class="st">"YOUR_ERDDAP_BOOT_DISK_NAME"</span></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    initialize_params {</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>      image <span class="op">=</span> <span class="st">"YOUR_BOOT_IMAGE"</span></span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>      size  <span class="op">=</span> <span class="st">"360"</span></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>      <span class="bu">type</span>  <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  attached_disk {</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    source      <span class="op">=</span> google_compute_disk.erddap_data_disk.<span class="bu">id</span></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    device_name <span class="op">=</span> <span class="st">"erddap-data"</span></span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  network_interface {</span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    subnetwork <span class="op">=</span> <span class="st">"YOUR_SUBNETWORK_SELF_LINK"</span></span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    nic_type   <span class="op">=</span> <span class="st">"GVNIC"</span>   <span class="co"># Required for C4-series instances</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>  service_account {</span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    email  <span class="op">=</span> <span class="st">"YOUR_VM_SERVICE_ACCOUNT_EMAIL"</span></span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    scopes <span class="op">=</span> [<span class="st">"cloud-platform"</span>]</span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>  lifecycle {</span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    ignore_changes <span class="op">=</span> [boot_disk]</span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="co"># BACKUP &amp; RECOVERY: Snapshot Policy Attachments</span></span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_compute_disk_resource_policy_attachment"</span> <span class="st">"erddap_boot_snap"</span> {</span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"snap-policy"</span></span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>  disk    <span class="op">=</span> google_compute_instance.erddap_vm.name</span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> var.zone1</span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>resource <span class="st">"google_compute_disk_resource_policy_attachment"</span> <span class="st">"erddap_data_snap"</span> {</span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"snap-policy"</span></span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>  disk    <span class="op">=</span> google_compute_disk.erddap_data_disk.name</span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> var.project<span class="op">-</span><span class="bu">id</span></span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> var.zone1</span>
-<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Key configuration notes:</p>
-<ul>
-<li>Keep the <code>metadata</code> block on every VM resource. NOAA organization policies can reject a deployment when <code>block-project-ssh-keys</code> or <code>enable-osconfig</code> is omitted.</li>
-<li><code>c4-highmem-*</code> instances are recommended for data-heavy ERDDAP workloads because ERDDAP benefits from additional memory for dataset caching and large NetCDF access. A mostly remote-data catalog can start with a smaller instance and disk, then be resized after monitoring actual demand.</li>
-<li><code>hyperdisk-balanced</code> storage is used for high-throughput NetCDF access and rclone VFS caching.</li>
-<li>GVNIC networking is required for C4-series instances.</li>
-<li>The attached data disk is separated from the boot disk to simplify upgrades, rebuilds, and recovery.</li>
-<li>Snapshot policies are recommended for automated backup and recovery.</li>
-</ul>
-<section id="boot-image-versus-existing-snapshot" class="level4">
-<h4 class="anchored" data-anchor-id="boot-image-versus-existing-snapshot">Boot Image Versus Existing Snapshot</h4>
-<p>The <code>initialize_params</code> block must reference a resource that already exists. For a new installation, use an approved image family as shown above:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>initialize_params {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  image <span class="op">=</span> <span class="st">"projects/YOUR_TRUSTED_IMAGE_PROJECT/global/images/family/YOUR_IMAGE_FAMILY"</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  size  <span class="op">=</span> <span class="st">"100"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span>  <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Use <code>snapshot</code> only when restoring or cloning from a snapshot that has already been created:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>initialize_params {</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  snapshot <span class="op">=</span> <span class="st">"projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  size     <span class="op">=</span> <span class="st">"360"</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span>     <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Terraform does not create a missing snapshot merely because its name appears in <code>initialize_params</code>. A <code>404 notFound</code> error means the snapshot reference is wrong or the prerequisite snapshot has not been created. Do not ignore that error; either create/import the snapshot first or switch the VM definition to an approved image.</p>
+<section id="prepare-the-terraform-workstation" class="level3">
+<h3 class="anchored" data-anchor-id="prepare-the-terraform-workstation">2. Prepare the Terraform Workstation</h3>
+<p>Terraform can run from Cloud Shell, a managed workstation, or an approved CI runner. First check whether it is already installed:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> version</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> version</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If Terraform is missing, install it using the <a href="https://developer.hashicorp.com/terraform/install">official HashiCorp installation instructions</a>.</p>
+<p>Authenticate to the intended GCP project:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> auth login</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> config set project YOUR_GCP_PROJECT_ID</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> auth list</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> config list</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On a local workstation, the Google Terraform provider commonly uses Application Default Credentials:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> auth application-default login</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cloud Shell and organization-managed runners may provide credentials differently. Authentication proves identity; IAM still determines which resources that identity may inspect or change.</p>
+<p>Clone the controlled infrastructure repository and work on a reviewable branch:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/YOUR_ORGANIZATION/YOUR_TERRAFORM_REPOSITORY.git</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> YOUR_TERRAFORM_REPOSITORY</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> switch <span class="at">-c</span> YOUR_CHANGE_BRANCH</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="organize-the-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="organize-the-configuration">3. Organize the Configuration</h3>
+<p>One clear file layout is shown below. Terraform loads all <code>.tf</code> files in the working directory together, so the filenames organize the code for people rather than controlling execution order.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>versions.tf</code></td>
+<td>Terraform version constraint and required providers</td>
+</tr>
+<tr class="even">
+<td><code>backend.tf</code></td>
+<td>Remote-state backend declaration</td>
+</tr>
+<tr class="odd">
+<td><code>variables.tf</code></td>
+<td>Input variable types and descriptions</td>
+</tr>
+<tr class="even">
+<td><code>terraform.tfvars.example</code></td>
+<td>Sanitized example values that may be committed</td>
+</tr>
+<tr class="odd">
+<td><code>terraform.tfvars</code></td>
+<td>Deployment values; commit only if organizational policy permits and it contains no secrets</td>
+</tr>
+<tr class="even">
+<td><code>bucket.tf</code></td>
+<td>Optional GCS bucket and bucket-level IAM</td>
+</tr>
+<tr class="odd">
+<td><code>instance.tf</code></td>
+<td>VM, boot disk, persistent data disk, and service account attachment</td>
+</tr>
+<tr class="even">
+<td><code>snapshots.tf</code></td>
+<td>Snapshot policy and disk-policy attachments</td>
+</tr>
+<tr class="odd">
+<td><code>outputs.tf</code></td>
+<td>Useful names, addresses, and resource identifiers</td>
+</tr>
+</tbody>
+</table>
+<p>Keep shared platform resources outside this configuration when another team or Terraform state owns them. Reference those resources as inputs or data sources instead of declaring a second copy.</p>
+</section>
+<section id="configure-providers-backend-and-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="configure-providers-backend-and-inputs">4. Configure Providers, Backend, and Inputs</h3>
+<section id="provider-and-backend" class="level4">
+<h4 class="anchored" data-anchor-id="provider-and-backend">4.1 Provider and backend</h4>
+<p><code>versions.tf</code> identifies Terraform and provider requirements:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">terraform</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">required_version</span> <span class="op">=</span> <span class="st">"&gt;= 1.6, &lt; 2.0"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">required_providers</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    google <span class="op">=</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">source</span>  <span class="op">=</span> <span class="st">"hashicorp/google"</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      version <span class="op">=</span> <span class="st">"~&gt; 7.0"</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">provider</span> <span class="st">"google"</span> {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  region  <span class="op">=</span> <span class="va">var</span>.region</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Treat the version constraints as an example baseline. Select and test versions according to the organization’s upgrade policy.</p>
+<p>Use a partial backend configuration so the public template does not contain a real state-bucket name:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">terraform</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">backend</span> <span class="st">"gcs"</span> {}</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The backend bucket must already exist and should have restricted IAM, versioning or another recovery control, and a retention approach appropriate to the organization.</p>
+</section>
+<section id="required-deployment-values" class="level4">
+<h4 class="anchored" data-anchor-id="required-deployment-values">4.2 Required deployment values</h4>
+<p>Do not make one region or zone look universal. Require each deployment to choose them explicitly:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> <span class="st">"project_id"</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  description <span class="op">=</span> <span class="st">"GCP project that will contain the ERDDAP resources"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  type        <span class="op">=</span> <span class="dt">string</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> <span class="st">"region"</span> {</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  description <span class="op">=</span> <span class="st">"GCP region selected for this deployment"</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  type        <span class="op">=</span> <span class="dt">string</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> <span class="st">"zone"</span> {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  description <span class="op">=</span> <span class="st">"GCP zone selected for this deployment"</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  type        <span class="op">=</span> <span class="dt">string</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> <span class="st">"machine_type"</span> {</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  description <span class="op">=</span> <span class="st">"Compute Engine machine type selected after workload sizing"</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  type        <span class="op">=</span> <span class="dt">string</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Provide values in an approved mechanism such as <code>terraform.tfvars</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>project_id   <span class="op">=</span> <span class="st">"YOUR_GCP_PROJECT_ID"</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>region       <span class="op">=</span> <span class="st">"YOUR_GCP_REGION"</span>       <span class="co"># Example only: us-east4</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>zone         <span class="op">=</span> <span class="st">"YOUR_GCP_ZONE"</span>         <span class="co"># Example only: us-east4-a</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>machine_type <span class="op">=</span> <span class="st">"YOUR_MACHINE_TYPE"</span>     <span class="co"># Example only: c4-highmem-16</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add organizational metadata variables and labels required in the target environment. NOAA-specific labels are requirements for NOAA deployments, not general Terraform requirements.</p>
 </section>
 </section>
-<section id="deploy-infrastructure" class="level3">
-<h3 class="anchored" data-anchor-id="deploy-infrastructure">3. Deploy Infrastructure</h3>
-<p>Initialize the working directory and validate the configuration before planning:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> init</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> fmt <span class="at">-check</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> validate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>After reviewing and editing the Terraform configuration, preview the proposed changes:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> plan    <span class="co"># Review resources that will be created, modified, or destroyed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Carefully review the output before applying, especially in existing environments where resources may already be in use. Once the plan looks correct, apply:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> apply   <span class="co"># Create or update VMs, disks, buckets, IAM permissions, and related resources</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If an apply fails, correct the missing prerequisite, permission, quota, or configuration error before running it again. Do not treat a partially created VM as a successful deployment; review the next plan to confirm Terraform’s state matches the intended infrastructure.</p>
-<hr>
-<hr>
+<section id="define-storage-and-least-privilege-iam" class="level3">
+<h3 class="anchored" data-anchor-id="define-storage-and-least-privilege-iam">5. Define Storage and Least-Privilege IAM</h3>
+<p>A GCS data bucket is optional. Create one only when ERDDAP will serve file-backed data from GCS and the bucket is not already managed elsewhere.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_storage_bucket"</span> <span class="st">"erddap_data"</span> {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  name                        <span class="op">=</span> <span class="st">"YOUR_GLOBALLY_UNIQUE_BUCKET_NAME"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  project                     <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  location                    <span class="op">=</span> <span class="va">var</span>.region</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  force_destroy               <span class="op">=</span> <span class="va">false</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  uniform_bucket_level_access <span class="op">=</span> <span class="va">true</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  labels <span class="op">=</span> {</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    environment <span class="op">=</span> <span class="st">"YOUR_ENVIRONMENT"</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    application <span class="op">=</span> <span class="st">"erddap"</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_storage_bucket_iam_member"</span> <span class="st">"erddap_reader"</span> {</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  bucket <span class="op">=</span> google_storage_bucket.erddap_data.name</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  role   <span class="op">=</span> <span class="st">"roles/storage.objectViewer"</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  member <span class="op">=</span> <span class="st">"serviceAccount:YOUR_ERDDAP_VM_SERVICE_ACCOUNT_EMAIL"</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Keep <code>force_destroy = false</code> for production data. The ERDDAP VM normally needs read-only object access. Give a separate processing or publishing identity write permissions only when that workload must create, replace, or delete objects.</p>
+</section>
+<section id="define-the-vm-and-its-disks" class="level3">
+<h3 class="anchored" data-anchor-id="define-the-vm-and-its-disks">6. Define the VM and Its Disks</h3>
+<p>The example separates the boot and data disks so both names and snapshot-policy attachments are explicit. Sizes, disk types, and machine types are examples to be replaced after workload sizing.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_disk"</span> <span class="st">"erddap_boot"</span> {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"YOUR_ERDDAP_BOOT_DISK_NAME"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  type    <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  size    <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  image   <span class="op">=</span> <span class="st">"YOUR_APPROVED_BOOT_IMAGE"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_disk"</span> <span class="st">"erddap_data"</span> {</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"YOUR_ERDDAP_DATA_DISK_NAME"</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  type    <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  size    <span class="op">=</span> <span class="dv">250</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_instance"</span> <span class="st">"erddap"</span> {</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  name                      <span class="op">=</span> <span class="st">"YOUR_ERDDAP_VM_NAME"</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  project                   <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  zone                      <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  machine_type              <span class="op">=</span> <span class="va">var</span>.machine_type</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  allow_stopping_for_update <span class="op">=</span> <span class="va">true</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  metadata <span class="op">=</span> {</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    block<span class="op">-</span>project<span class="op">-</span>ssh<span class="op">-</span><span class="bu">keys</span> <span class="op">=</span> <span class="va">true</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    enable<span class="op">-</span>osconfig        <span class="op">=</span> <span class="va">true</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  boot_disk {</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">source</span>      <span class="op">=</span> google_compute_disk.erddap_boot.id</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    auto_delete <span class="op">=</span> <span class="va">false</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  attached_disk {</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">source</span>      <span class="op">=</span> google_compute_disk.erddap_data.id</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    device_name <span class="op">=</span> <span class="st">"erddap-data"</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  network_interface {</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    subnetwork <span class="op">=</span> <span class="st">"YOUR_SUBNETWORK_SELF_LINK"</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    nic_type   <span class="op">=</span> <span class="st">"GVNIC"</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  service_account {</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    email  <span class="op">=</span> <span class="st">"YOUR_ERDDAP_VM_SERVICE_ACCOUNT_EMAIL"</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    scopes <span class="op">=</span> [<span class="st">"cloud-platform"</span>]</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  labels <span class="op">=</span> {</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    environment <span class="op">=</span> <span class="st">"YOUR_ENVIRONMENT"</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    role        <span class="op">=</span> <span class="st">"erddap-server"</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add the target organization’s required labels, shielded-VM settings, reservation settings, network tags, and policies. Confirm that the selected machine family supports the chosen disk and network-interface types.</p>
+<p>Attach an existing snapshot policy to both disks when that is part of the backup design:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_disk_resource_policy_attachment"</span> <span class="st">"erddap_boot"</span> {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"YOUR_SNAPSHOT_POLICY_NAME"</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  disk    <span class="op">=</span> google_compute_disk.erddap_boot.name</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_disk_resource_policy_attachment"</span> <span class="st">"erddap_data"</span> {</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  name    <span class="op">=</span> <span class="st">"YOUR_SNAPSHOT_POLICY_NAME"</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  disk    <span class="op">=</span> google_compute_disk.erddap_data.name</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  project <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  zone    <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="normal-new-deployment-versus-snapshot-restoration" class="level4">
+<h4 class="anchored" data-anchor-id="normal-new-deployment-versus-snapshot-restoration">Normal new deployment versus snapshot restoration</h4>
+<p>For a normal initial deployment, create the boot disk from an approved image as shown above. The ERDDAP software is then installed and configured on the new VM.</p>
+<p>Use a snapshot only when restoring or cloning a disk that already contains a configured system. SWFSC used this path while replacing an existing VM during a machine-family change; it is not the normal first-installation path.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode terraform code-with-copy"><code class="sourceCode terraform"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">resource</span> <span class="st">"google_compute_disk"</span> <span class="st">"restored_boot"</span> {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  name     <span class="op">=</span> <span class="st">"YOUR_RESTORED_BOOT_DISK_NAME"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  project  <span class="op">=</span> <span class="va">var</span>.project_id</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  zone     <span class="op">=</span> <span class="va">var</span>.zone</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  type     <span class="op">=</span> <span class="st">"hyperdisk-balanced"</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  size     <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  snapshot <span class="op">=</span> <span class="st">"projects/YOUR_GCP_PROJECT_ID/global/snapshots/YOUR_EXISTING_SNAPSHOT"</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The snapshot must already exist. A <code>404 notFound</code> response indicates an incorrect reference or missing prerequisite, not a resource Terraform will create automatically.</p>
+</section>
+</section>
+<section id="initialize-review-and-apply" class="level3">
+<h3 class="anchored" data-anchor-id="initialize-review-and-apply">7. Initialize, Review, and Apply</h3>
+<p>Initialize against the state backend selected for this deployment:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> init <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-backend-config</span><span class="op">=</span><span class="st">'bucket=YOUR_TERRAFORM_STATE_BUCKET'</span> <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-backend-config</span><span class="op">=</span><span class="st">'prefix=YOUR_UNIQUE_STATE_PREFIX'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Format and validate the configuration:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> fmt <span class="at">-check</span> <span class="at">-recursive</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> validate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create and inspect a saved plan:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> plan <span class="at">-out</span><span class="op">=</span>tfplan</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> show tfplan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Stop if the plan would replace, detach, or destroy a resource unexpectedly. If resources already exist, resolve ownership and import requirements before applying; do not create duplicate declarations for resources managed by another state.</p>
+<p>After review and approval, apply the saved plan:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> apply tfplan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run a fresh <code>terraform plan</code> afterward. A successful deployment should produce no unexpected additional changes and should leave the repository, state, and resource ownership understandable to the next maintainer.</p>
 
 
 </section>
@@ -1568,8 +1627,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./gcp-setup.html" class="pagination-link" aria-label="Setup Overview">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Setup Overview</span></span>
+      <a href="./architecture.html" class="pagination-link" aria-label="Project Architecture">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Project Architecture</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

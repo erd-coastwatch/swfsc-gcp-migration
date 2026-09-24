@@ -1,73 +1,93 @@
 ---
-title: "SWFSC ERDDAP Cloud Migration"
+title: "Deploying ERDDAP on Google Cloud"
 ---
 
-This book documents the migration of NOAA CoastWatch West Coast Node / SWFSC ERDDAP services and associated data processing workflows to Google Cloud Platform (GCP). The documentation is intended to serve as a practical technical record of the cloud architecture, serving environment, reusable deployment patterns, and operational workflows developed during the migration.
+This book is a practical guide for deploying and maintaining ERDDAP on Google Cloud Platform (GCP). It is based on the architecture and deployment experience of the NOAA CoastWatch West Coast Node at SWFSC, but the core setup path is written for other groups building their own ERDDAP environment.
 
-The project is part of a broader NOAA/NMFS effort to move data systems away from legacy on-premises infrastructure and into cloud-based environments. The goal is not only to preserve existing ERDDAP services and operational data products, but also to make the supporting workflows more reproducible, maintainable, and easier to operate over time.
+The guide complements the [official ERDDAP installation documentation](https://erddap.github.io/docs/server-admin/deploy-install). It focuses on the surrounding cloud infrastructure: Compute Engine, persistent storage, optional Google Cloud Storage access, Identity-Aware Proxy, load balancing, Terraform, service management, validation, backup, and recovery.
 
-## Project goals
+## Who this guide is for
 
-This documentation tracks the design, migration, and modernization of data systems used to support operational ocean data access.
+The primary audience is a technical team responsible for deploying or administering ERDDAP in a NOAA or similar managed GCP environment. Readers should be comfortable with Linux administration, the command line, GCP resources, and basic Terraform workflows.
 
-The main goals are to:
+Before beginning, identify who owns:
 
-- migrate ERDDAP-supporting workflows from legacy servers to GCP
-- preserve scientific continuity with existing data products and access patterns
-- standardize workflow structure across projects
-- reduce hard-coded paths, credentials, and hidden system assumptions
-- support reproducible infrastructure and containerized processing
-- document operational details for review, handoff, maintenance, and future workflow development
+- the GCP project, billing, quotas, and organization policies;
+- IAM roles and service accounts;
+- the VPC, subnet, firewall rules, and proxy-only subnet;
+- the HTTPS load balancer, certificate, DNS, and external routing;
+- Terraform source and state;
+- ERDDAP configuration, datasets, and ongoing operations.
 
-## Cloud architecture
+These responsibilities may be split across the ERDDAP team, a platform team, and organizational IT. The guide identifies the required components but cannot grant permissions or create resources controlled by another team.
 
-The migration uses a combination of long-lived serving infrastructure, processing environments, and scheduled cloud-native jobs.
+## What the guide covers
 
-At the center of the system is a dedicated **ERDDAP VM** configured for high-performance data serving. The ERDDAP environment uses persistent storage for caches and working directories, rclone-mounted Google Cloud Storage buckets for dataset access, and a Tomcat-hosted ERDDAP instance for data distribution.
+The core deployment path covers:
 
-Operational processing is handled through two main patterns. **Processing VMs** support interactive development, testing, validation, reprocessing, and heavier data-generation tasks. **Cloud Run Jobs** support containerized workflows that run on a schedule or on demand. Cloud Scheduler triggers recurring jobs, Artifact Registry stores workflow container images, and Secret Manager provides credentials and runtime secrets without storing them directly in code.
+1. selecting an ERDDAP architecture and sizing approach;
+2. provisioning VMs, disks, buckets, IAM, and snapshot policies;
+3. connecting to private VMs through Identity-Aware Proxy;
+4. safely initializing persistent storage;
+5. optionally mounting a GCS data bucket through rclone;
+6. installing pinned Java, Tomcat, and ERDDAP versions;
+7. validating ERDDAP locally before connecting it to a load balancer;
+8. verifying private, load-balanced, and public access;
+9. preparing the system for production use, backup, reboot, and recovery.
 
-Across the system, reusable templates and consistent repository structures are used to make workflows easier to deploy, compare, and maintain.
+## What the guide does not prescribe
 
-## Workflow modernization
+Every group has different datasets and processing responsibilities. The core guide does not prescribe:
 
-Many of the workflows documented here began as long-running operational scripts developed over many years. As part of the migration, these workflows have been reorganized into more standardized, reproducible, and cloud-ready systems.
+- how source datasets are acquired or copied;
+- how an on-premises ERDDAP is synchronized during migration;
+- how individual `datasets.xml` definitions are authored;
+- a specific scientific-processing workflow;
+- SWFSC dataset inventories, migration waves, or internal tracking procedures.
 
-This modernization includes separating configuration from runtime logic, reducing machine-specific assumptions, containerizing processing code, standardizing deployment scripts, and documenting input/output paths, scheduling behavior, and ERDDAP integration. The intent is to preserve the underlying science and operational products while improving maintainability and transparency.
+Those activities belong in dataset-specific repositories, internal runbooks, or project-management systems.
 
-For the shared project structures and deployment patterns used across workflows, see the [GCP Data Processing Templates](gcp-templates.qmd) chapter.
+## Reference architecture
 
-## Project sections
+The required serving environment is deliberately small:
 
-This book is organized into three main sections.
+- a private Compute Engine VM running Tomcat and ERDDAP;
+- a persistent disk for ERDDAP working files, logs, and cache;
+- an HTTPS load balancer and health check for public access;
+- Terraform or another reviewed infrastructure-as-code process.
 
-### Cloud setup
+A GCS data bucket and rclone mount are optional. They are useful for large file-backed datasets, but an ERDDAP that serves remote HTTP, THREDDS, or other ERDDAP sources may not need them.
 
-The cloud setup chapters document the shared infrastructure, VM access patterns, ERDDAP serving environment, processing VM setup, migration/recovery notes, and reusable deployment templates.
+Processing VMs, Cloud Run Jobs, Cloud Scheduler, Artifact Registry, and Secret Manager are also optional. They support data-generation workflows but are not prerequisites for running ERDDAP.
 
-- [Setup Overview](gcp-setup.qmd) provides a high-level map of the setup documentation.
-- [Cloud Infrastructure Setup](gcp-infrastructure.qmd) documents Terraform-managed VMs, buckets, disks, IAM, and snapshot policies.
-- [Accessing VMs](gcp-vm-access.qmd) documents SSH, IAP tunneling, browser SSH, and port forwarding.
-- [ERDDAP VM Setup](gcp-erddap-vm.qmd) documents the dedicated ERDDAP serving environment.
-- [Processing VM Setup](gcp-processing-vm.qmd) documents processing and development VM configuration.
-- [Migration, Upgrade, and Recovery](gcp-migration-recovery.qmd) documents snapshot and cleanup steps used during rebuilds or migrations.
-- [GCP Data Processing Templates](gcp-templates.qmd) describes the Cloud Run and processing VM template repositories used to standardize workflow structure across projects.
+See [Project Architecture](architecture.qmd) for the complete design and decision points.
 
-### Workflows
+## Book organization
 
-The workflow chapters document individual operational pipelines migrated or adapted for cloud-based processing.
+### Deploy ERDDAP on GCP
 
-- [MH1 / MPOC / MPIC Processor](mh1-processor.qmd) documents the Cloud Run workflow for retrieving and publishing MODIS-Aqua MH1 ocean color, MH1 SST, MPIC, and MPOC products.
-- [VIIRS Net Primary Productivity](viirs-netpp.qmd) documents the daily and monthly VIIRS NetPP workflow for SNPP and NOAA-20.
-- [MUR SST](mur-sst.qmd) documents the MUR SST, anomaly, frontal, and monthly-processing workflows.
-- [C-HARM](charm.qmd) documents the containerized C-HARM processing workflow.
+These chapters form the reusable deployment path:
 
-### Presentations
+- [Setup Overview](gcp-setup.qmd)
+- [Project Architecture](architecture.qmd)
+- [Cloud Infrastructure Setup](gcp-infrastructure.qmd)
+- [Accessing VMs](gcp-vm-access.qmd)
+- [ERDDAP VM Setup](gcp-erddap-vm.qmd)
+- [Go-Live Checklist and Recovery Basics](gcp-migration-recovery.qmd)
 
-The presentations section collects project update slides and status material used during the migration.
+### Optional processing infrastructure
 
-- [Presentations and Project Updates](erddap-cloud-migration-presentations.qmd) provides access to the ERDDAP cloud migration presentation materials.
+These chapters apply only when the group also operates data-processing systems:
 
-## Status
+- [Processing VM Setup](gcp-processing-vm.qmd)
+- [GCP Data Processing Templates](gcp-templates.qmd)
 
-This documentation is a living technical record. It is intended to capture both the final cloud architecture and the practical operational details needed to maintain, troubleshoot, and extend the migrated workflows.
+### SWFSC implementation examples
+
+The workflow and source-code sections document pipelines developed during the SWFSC migration. They are examples of how one group organized cloud processing; they are not required steps in an ERDDAP deployment.
+
+## Validated baseline
+
+The ERDDAP VM procedure was validated on a new Ubuntu 22.04 VM with a persistent data disk, an optional read-only rclone mount, Temurin Java 25.0.1+8, Tomcat 11.0.26, and ERDDAP 2.31.1. The repository installation script pins the versions it installs. Review and retest those pins before upgrading any component.
+
+This documentation remains a living reference. Infrastructure examples must be adapted to the target project, security policy, workload, and ownership model before they are applied.

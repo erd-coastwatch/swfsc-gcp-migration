@@ -1,140 +1,122 @@
 ---
-title: "Processing VM Setup"
+title: "Optional Processing VM Setup"
 ---
 
-This section describes the initialization and configuration of processing environments used for operational workflows, testing, reprocessing, and data generation. Unlike the ERDDAP VM, which is optimized for data serving, processing VMs are intended for workflow execution, algorithm development, backfills, and validation tasks.
+A processing VM is optional. Use one when the team needs cloud compute for data generation, backfills, validation, or interactive development. It is not required for an ERDDAP that serves remote sources or files produced elsewhere.
 
-Processing environments typically use C4 standard instances (for example, `c4-standard-16`) together with Hyperdisk Balanced storage, prioritizing compute performance over the additional memory used by ERDDAP serving environments.
+This chapter covers only the cloud and operating-system foundation. Python environments, scientific packages, Earthdata credentials, external software, and project-directory conventions belong in workflow-specific documentation maintained by the processing team.
 
-### 1. Configure the Operating System Environment
+### 1. Provision the VM
 
-#### 1.1 Configure Shared User Group Permissions
+Define the processing VM with the same reviewed infrastructure-as-code practices used for the ERDDAP VM. Choose independently:
+
+- machine family, CPU, and memory;
+- boot and persistent data-disk sizes;
+- VPC, subnet, and IAP access;
+- service account and least-privilege IAM;
+- snapshot policy, labels, and organization-required controls.
+
+Do not copy the ERDDAP VM size automatically. Start with a defensible estimate and resize after observing actual CPU, memory, I/O, and storage use.
+
+### 2. Configure Shared Access When Needed
+
+If multiple operators or automation accounts need access to the persistent workspace, create a group with a generic name selected by the team:
 
 ```{.bash}
-sudo groupadd cwatch                              # Create the cwatch group if it does not already exist
-sudo usermod -aG cwatch $USER                     # Add your current user
-sudo usermod -aG cwatch YOUR_OPERATIONAL_USERNAME # Add the operational/service account (e.g. erd)
-newgrp cwatch                                     # Refresh group membership (or log out and back in)
+PROCESSING_GROUP=processing-admins
+
+getent group "$PROCESSING_GROUP" >/dev/null || \
+  sudo groupadd "$PROCESSING_GROUP"
+
+sudo usermod -aG "$PROCESSING_GROUP" "$USER"
+
+# Optional: add a separate operational or automation account
+sudo usermod -aG "$PROCESSING_GROUP" YOUR_OPERATIONAL_USERNAME
 ```
 
-#### 1.2 Initialize and Mount Persistent Storage
+Omit the placeholder account command when it is not needed. Log out and back in after changing group membership.
+
+### 3. Initialize the Persistent Data Disk
+
+Confirm the stable device path before running this block. It formats the device only when `blkid` finds no existing filesystem.
 
 ```{.bash}
+PROCESSING_GROUP=processing-admins
+data_device=/dev/disk/by-id/google-processing-data
+data_mount=/mnt/disks/processing-data
+
 ls -l /dev/disk/by-id/
-sudo blkid /dev/disk/by-id/google-processing-data
 
-sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard \
-    /dev/disk/by-id/google-processing-data
+if sudo blkid "$data_device" >/dev/null 2>&1; then
+  echo "Existing filesystem detected; the disk will not be formatted."
+  sudo blkid "$data_device"
+else
+  echo "No filesystem detected; formatting the new data disk."
+  sudo mkfs.ext4 \
+    -m 0 \
+    -E lazy_itable_init=0,lazy_journal_init=0,discard \
+    "$data_device"
+fi
 
-sudo mkdir -p /mnt/disks/processing-data
-sudo mount -o discard,defaults \
-    /dev/disk/by-id/google-processing-data \
-    /mnt/disks/processing-data
+sudo mkdir -p "$data_mount"
+sudo mount -o discard,defaults "$data_device" "$data_mount"
 
-sudo chown -R root:cwatch /mnt/disks/processing-data
-sudo chmod -R 2775 /mnt/disks/processing-data
-sudo ln -s /mnt/disks/processing-data /data
+disk_uuid=$(sudo blkid -s UUID -o value "$data_device")
+test -n "$disk_uuid" || {
+  echo "Unable to determine the data-disk UUID" >&2
+  exit 1
+}
+
+sudo cp -a /etc/fstab "/etc/fstab.before-processing-$(date +%Y%m%d-%H%M%S)"
+if ! grep -qE "^[[:space:]]*UUID=${disk_uuid}[[:space:]]" /etc/fstab; then
+  echo "UUID=${disk_uuid} ${data_mount} ext4 defaults,discard,nofail 0 2" |
+    sudo tee -a /etc/fstab
+fi
+
+sudo chown root:root /mnt/disks
+sudo chmod 0755 /mnt/disks
+sudo chown root:"$PROCESSING_GROUP" "$data_mount"
+sudo chmod 2775 "$data_mount"
+
+if sudo test -e /data || sudo test -L /data; then
+  echo "/data already exists; review it before changing the path."
+else
+  sudo ln -s "$data_mount" /data
+fi
 ```
 
-### 2. Configure the Data Processing Environment
-
-#### 2.1 Install Conda Package Manager
+Validate the mount and `/etc/fstab` entry before rebooting:
 
 ```{.bash}
-curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-conda config --add channels conda-forge
+namei -l /mnt/disks/processing-data
+findmnt /mnt/disks/processing-data
+df -hT /mnt/disks/processing-data
 
-# Create and activate a project environment
-conda create --name ENV_NAME
-conda activate ENV_NAME
-
-# Install common scientific and workflow dependencies
-conda install numpy pandas netCDF4 python-dateutil
-conda install -c conda-forge nco
-conda install -c conda-forge podaac-data-subscriber
-
-# Clean up
-rm Miniconda3-latest-Linux-x86_64.sh
+sudo umount /mnt/disks/processing-data
+sudo mount -a
+findmnt /mnt/disks/processing-data
 ```
 
-#### 2.2 Configure NASA Earthdata Authentication
+### 4. Verify Cloud Identity and Storage Access
 
-Many satellite workflows require NASA Earthdata authentication. Create a `.netrc` file in the user home directory:
+Prefer the VM's attached service account for unattended cloud access. Do not place service-account keys on the VM when the attached identity can provide the required permissions.
+
+Confirm the active identity and test only the storage operation the workflow requires:
 
 ```{.bash}
-echo "machine urs.earthdata.nasa.gov login YOUR_EARTHDATA_USERNAME password YOUR_EARTHDATA_PASSWORD" >> ~/.netrc
-chmod 600 ~/.netrc
+gcloud auth list
+
+# Read test
+gcloud storage ls gs://YOUR_PROCESSING_BUCKET_NAME/
+
+# Optional write test; use only when the service account is intended to write
+test_object="gs://YOUR_PROCESSING_BUCKET_NAME/access-tests/$(hostname)-$(date -u +%Y%m%dT%H%M%SZ).txt"
+printf 'processing VM access test\n' | gcloud storage cp - "$test_object"
+gcloud storage rm "$test_object"
 ```
 
-::: {.callout-warning}
-Do not commit `.netrc`, cookies, passwords, or credentials to Git repositories.
-:::
+Skip the write test for read-only identities. If access fails, correct IAM through the configuration or administrative process that owns it rather than adding broad permissions on the VM.
 
-#### 2.3 Test External Data Access
+### 5. Hand Off to Workflow-Specific Setup
 
-This example uses MUR4.2 as a test dataset — the files are small and the workflow validates NASA authentication, external data access, local storage, and the processing environment.
-
-```{.bash}
-mkdir -p /data/podaac/data
-
-podaac-data-downloader \
-    -c MUR25-JPL-L4-GLOB-v04.2 \
-    -d /data/podaac/data \
-    --start-date 2025-08-01T21:00:00Z \
-    --end-date 2025-08-10T21:00:00Z
-```
-
-#### 2.4 Install External Processing Software
-
-Some workflows require additional compiled tools. Two common examples:
-
-**DINEOF** — for gap-filling satellite data:
-
-```{.bash}
-sudo apt-get update
-sudo apt-get install -y gfortran make libarpack2-dev libnetcdf-dev libnetcdff-dev git
-
-git clone https://github.com/Aida-Alvera/DINEOF
-cd DINEOF/
-cp config.mk.template config.mk
-make
-```
-
-**CoastWatch Utilities (cwutils)** — download the appropriate Linux package from the [CoastWatch Utilities distribution site](https://coastwatch.noaa.gov/cwn/tools.html) and transfer it to the processing VM:
-
-```{.bash}
-# Transfer from local machine
-gcloud compute scp \
-    /path/to/cwutils-4_1_0_397-linux-x86_64.tar.gz \
-    YOUR_USERNAME@YOUR_PROCESSING_VM_NAME:~/
-
-# Unpack on the VM
-tar -zxf cwutils-4_1_0_397-linux-x86_64.tar.gz
-rm cwutils-4_1_0_397-linux-x86_64.tar.gz
-```
-
-### 3. Configure Project Workspace
-
-Processing VMs maintain one directory per workflow or project using a standardized template that provides a consistent structure across workflows. See the [GCP Data Processing Templates](gcp-templates.html) page for the full template reference.
-
-Project template repository: [erd-coastwatch/vm-dataproc-template](https://github.com/erd-coastwatch/vm-dataproc-template)
-
-```{.bash}
-cd ~
-git clone https://github.com/erd-coastwatch/vm-dataproc-template.git
-cp -R vm-dataproc-template YOUR_PROJECT_NAME   # Example: viirs_netpp
-cd YOUR_PROJECT_NAME
-```
-
-Create a persistent storage directory for the project and replace the template data directory with a symlink:
-
-```{.bash}
-mkdir -p /data/projects/YOUR_PROJECT_NAME
-rm -rf data
-ln -s /data/projects/YOUR_PROJECT_NAME data
-```
-
-This keeps large datasets, temporary products, downloads, and workflow outputs separated from the VM boot disk while maintaining a lightweight project workspace. Code, configuration, notebooks, templates, and documentation remain in the user workspace; the `data/` directory points to persistent external storage on the mounted Hyperdisk.
-
----
+At this point the VM, persistent disk, private access, identity, and cloud storage permissions are ready. The processing team can now apply its established environment-management and workflow instructions. Keep those changing scientific dependencies and credentials out of the general ERDDAP deployment guide.

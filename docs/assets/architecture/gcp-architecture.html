@@ -283,8 +283,8 @@
 .ga-right{
   position:absolute;
   top:0;
-  right:0;
-  transform:translate(50%, -50px);
+  right:12px;
+  transform:translate(0, -50px);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -694,16 +694,16 @@ const D={
     b:"Three required components: the load balancer (forwarding rules, DoD certificates, proxy subnets, firewall rules), a PSC NAT subnet (one per service attachment), and a PSC Service Attachment (filed via SCR, created by the network team). One load balancer is shared across all apps in the project — PSC is always one-to-one per service. All traffic appears to originate from the PSC NAT subnet, so any IP restrictions must be communicated to the network team in the SCR.",
     n:"Google's CA cannot issue certificates for NOAA domains. DoD certificates must be requested separately and uploaded manually via Certificate Manager in the GCP Console — this step cannot be automated through Terraform."},
   erddap:{t:"ERDDAP VM",s:"GCP · Compute Engine",
-    b:"Dedicated solely to serving — no data processing runs here. The BIG ERDDAP at coastwatch.pfeg.noaa.gov hosts 3,112 datasets (89% gridded), has served 78,281 unique users and 1.41M requests since last restart. Machine sizing follows on-prem RAM: e.g. a 377 GB on-prem server maps to a <code>c4-highmem-48</code>. Modern C4 Intel cores substantially outperform the legacy Xeon Platinum CPUs being replaced.",
+    b:"Dedicated primarily to serving ERDDAP. Separating sustained processing workloads prevents them from competing with public requests for memory, CPU, and disk I/O. Machine and disk sizing should follow the catalog, data-source pattern, and measured demand rather than copying this example unchanged.",
     n:"The strict separation of serving and processing is a key architectural decision. ERDDAP is memory-bound for subsetting operations; co-locating processing jobs would contend for RAM during peak request loads."},
   edisk:{t:"ERDDAP Hyperdisk",s:"GCP · Hyperdisk Balanced",
     b:"Stores ERDDAP's <code>bigParentDirectory</code> — the working directory, dataset index, response cache, and request logs. Chosen over standard persistent disk for higher I/O throughput needed with large NetCDF workloads. A standard symlink (<code>/data</code>) provides a consistent path so ERDDAP configuration doesn't need to change between environments.",
     n:null},
   rclone:{t:"rclone mount",s:"rclone / FUSE",
-    b:"Mounts the GCS production bucket as a local filesystem path (<code>/mnt/gcs/erd</code>) inside the ERDDAP VM using a VFS layer. The mount is read-only to protect source data. Local NVMe caching (~500 GB) handles ERDDAP's range-request access pattern on NetCDF files. The mount lifecycle is managed by a systemd service that auto-starts on boot and restarts on failure.",
+    b:"Mounts the GCS production bucket as a local filesystem path such as <code>/mnt/gcs/erddap-data</code> inside the ERDDAP VM using a VFS layer. The mount is read-only to protect source data. A cache on the persistent data disk supports ERDDAP's range-request access pattern on NetCDF files. A systemd service manages startup and recovery.",
     n:"GCSFuse was evaluated but rclone was chosen for better compatibility with ERDDAP's random-access read patterns on large NetCDF files."},
   vm:{t:"Processing VM",s:"GCP · Compute Engine C4 series",
-    b:"Used for heavy, long-running, or memory-intensive processing: backfills, data reprocessing, and jobs that exceed Cloud Run's limits. Follows a standardised directory layout (<code>/home/erd/</code>) with <code>config/</code>, <code>data/</code>, <code>scripts/</code>, <code>src/</code>, and <code>templates/</code> subdirectories — enabling predictable pathing, environment reproducibility, and seamless handoff between team members.",
+    b:"Used for heavy, long-running, or memory-intensive processing such as backfills, data reprocessing, and jobs that exceed Cloud Run limits. Its scientific software and project layout are maintained separately from the ERDDAP serving setup.",
     n:"The template-dataproc GitHub template encodes this structure so new VMs start from a consistent baseline. Legacy code from 2014 with hard-coded paths and machine-specific assumptions has been refactored to use config-driven logic as part of the migration."},
   vmdisk:{t:"Processing Hyperdisk · 4 TB",s:"GCP · Hyperdisk Balanced",
     b:"High-throughput scratch disk mounted at <code>/mnt/disks/xyz-data</code> and symlinked to <code>/data</code> for workflow consistency. Holds temporary files, intermediate composites, and large working datasets during processing. Final validated outputs are written to the GCS production bucket; in-progress work stays on the work disk or GCS work bucket.",
@@ -729,11 +729,11 @@ const D={
   tf:{t:"Terraform",s:"HashiCorp Terraform",
     b:"All infrastructure is defined as version-controlled code across four files: <code>main.tf</code> (providers, project config, remote state in GCS), <code>instance.tf</code> (ERDDAP and processing VMs), <code>bucket.tf</code> (storage + IAM), and <code>load_balancer.tf</code> (external access, SSL, health checks). This replaced manual GCP Console setup, ensuring environments are reproducible from dev to prod and changes are auditable.",
     n:"DoD certificates are the one manual step — Certificate Manager doesn't support non-Google CAs via Terraform, so the certificate chain and private key must be uploaded through the Console."},
-  users:{t:"External End Users",s:"Public · ~78K unique users",
-    b:"Scientists, researchers, and automated systems worldwide accessing ERDDAP over HTTPS. The BIG ERDDAP has served 78,281 unique users and 1.41 million requests since last restart, with dataset content spanning sea surface temperature, ocean color, acoustic monitoring, MODIS, VIIRS, Argo floats, marine mammals, and more. All traffic enters only through the load balancer.",
+  users:{t:"External End Users",s:"Public ERDDAP clients",
+    b:"Scientists, researchers, applications, and automated systems access ERDDAP over HTTPS. Public traffic enters through the load balancer rather than connecting directly to the private VM.",
     n:null},
-  dev:{t:"Scientist / Developer",s:"Internal · SWFSC team",
-    b:"The SWFSC team migrating and maintaining ERDDAP on GCP — Jonathan Sherman, Sunny Hospital, Dale Robinson, Cara Wilson, Madi Richardson, Roy Mendelssohn, and Lynn Dewitt. They manage Terraform infrastructure, refactor legacy processing scripts (some dating to 2014), build Cloud Run containers, and develop new data workflows. Migration is driven by a NOAA NMFS mandate to move all data to GCP by end of 2026, with on-prem server support ending March 2027.",
+  dev:{t:"Scientist / Developer",s:"Authorized service team",
+    b:"Authorized team members administer infrastructure, maintain ERDDAP configuration, and operate any optional data-processing workflows. Their access follows IAP, OS Login, service-account, and least-privilege IAM controls.",
     n:null},
 };
 function gm(k){
