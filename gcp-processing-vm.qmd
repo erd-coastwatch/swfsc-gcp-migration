@@ -120,3 +120,5 @@ Skip the write test for read-only identities. If access fails, correct IAM throu
 ### 5. Hand Off to Workflow-Specific Setup
 
 At this point the VM, persistent disk, private access, identity, and cloud storage permissions are ready. The processing team can now apply its established environment-management and workflow instructions. Keep those changing scientific dependencies and credentials out of the general ERDDAP deployment guide.
+
+For a new repository structure, see the optional [public processing VM template](gcp-templates.qmd#processing-vm-template). It does not configure this VM or its persistent disk.

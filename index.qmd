@@ -80,7 +80,7 @@ These chapters form the reusable deployment path:
 These chapters apply only when the group also operates data-processing systems:
 
 - [Processing VM Setup](gcp-processing-vm.qmd)
-- [GCP Data Processing Templates](gcp-templates.qmd)
+- [Public Data Processing Templates](gcp-templates.qmd), including Cloud Run Job and processing VM starting points
 
 ### SWFSC implementation examples
 

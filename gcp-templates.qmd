@@ -1,78 +1,26 @@
 ---
-title: "GCP Data Processing Templates"
+title: "Public Data Processing Templates"
 ---
 
-To support consistent, reproducible workflows across projects, SWFSC CoastWatch maintains two GitHub template repositories. These templates provide a standardized starting point for new data processing projects deployed on Google Cloud Platform.
+SWFSC CoastWatch maintains two **public, sanitized GitHub templates** for groups that also process data on GCP. They are optional starting points: an ERDDAP deployment does not need either template. Each repository contains example files and placeholders that must be adapted to the new project.
 
-## Template Repositories
+| Template | Choose it when | Repository |
+|---|---|---|
+| Cloud Run Job | A container should run a batch workflow on demand or on a schedule. | [cloud-run-template](https://github.com/erd-coastwatch/cloud-run-template) |
+| Processing VM | A workflow runs directly on a VM, with scripts, notebooks, and a persistent workspace. | [vm-dataproc-template](https://github.com/erd-coastwatch/vm-dataproc-template) |
 
-### Cloud Run Template
+## Cloud Run Job template
 
-**Repository:** [erd-coastwatch/cloud-run-template](https://github.com/erd-coastwatch/cloud-run-template)
+The [Cloud Run template](https://github.com/erd-coastwatch/cloud-run-template) includes a `Dockerfile`, `entrypoint.sh`, `deploy_job.sh`, and example `config/`, `scripts/`, `src/`, and `templates/` directories. Its deployment script contains project, region, image, service account, and secret placeholders. Review the entire script and replace those values before running it; it can create cloud resources and deploy a job.
 
-Use this template for containerized batch processing jobs deployed on **Google Cloud Run**. It follows the same structure used by the VIIRS NetPP, MUR SST, and CHARM workflows and is designed for jobs that run on a schedule or on demand, process data, and write results to GCS.
+Start with the repository's [README](https://github.com/erd-coastwatch/cloud-run-template/blob/main/README.md), then use **Use this template** on GitHub to create a repository for your workflow. Add your processing code, configure its GCP identity and storage permissions, and review the deployment script against your organization's infrastructure ownership.
 
-```text
-cloud-run-template/
-├── config/
-│   ├── config.yml          # Runtime settings (sensors, GCS paths, API keys)
-│   └── requirements.txt    # Python dependencies
-├── deploy_job.sh           # Build, push, and deploy the Cloud Run job
-├── Dockerfile              # Container definition
-├── entrypoint.sh           # Job mode selector
-├── scripts/                # Processing and orchestration logic
-└── templates/              # CDL or other output templates
-```
+## Processing VM template
 
-### Dataproc / VM Template
+The [processing VM template](https://github.com/erd-coastwatch/vm-dataproc-template) provides example `config/`, `notebooks/`, `scripts/`, `src/`, `data/`, `docs/`, `logs/`, `templates/`, and `tests/` directories. Its `data/` directory contains an example file; it is **not** a preconfigured link to a persistent disk. Choose the storage layout and mount paths appropriate for your project.
 
-**Repository:** [erd-coastwatch/vm-dataproc-template](https://github.com/erd-coastwatch/vm-dataproc-template)
+First establish the VM, disk, service account, and required storage access using [Optional Processing VM Setup](gcp-processing-vm.qmd). Then follow the template's [README](https://github.com/erd-coastwatch/vm-dataproc-template/blob/main/README.md) and use **Use this template** to create your workflow repository. The template organizes code and documentation; it does not provision a VM or install a scientific environment.
 
-Use this template for interactive or long-running workflows that run directly on a **Dataproc or processing VM**. It is structured for projects that combine notebooks, scripts, and reusable Python modules, with access to GCS-mounted data.
+## Create a repository from a template
 
-```text
-vm-dataproc-template/
-├── README.md               # Project overview and setup instructions
-├── environment.yml         # Conda environment
-├── config.yml              # Configuration file
-├── LICENSE
-├── notebooks/              # Jupyter notebooks for exploration and analysis
-├── scripts/                # Shell and Python workflow scripts
-├── src/                    # Reusable Python modules and helpers
-├── data/                   # Symlink to persistent storage on the mounted processing disk
-├── templates/              # CDL or CSV template files
-├── resources/              # Misc reference files used during processing
-├── logs/                   # Runtime logs
-├── docs/                   # Documentation (Quarto or Sphinx)
-└── tests/                  # Unit tests
-```
-
-GCS mount points follow the convention:
-
-```text
-/mnt/gcs/data/<project>/           # Large input data
-/mnt/gcs/erddap_data_pw/<project>/ # ERDDAP-served output data
-```
-
-The `data/` directory in the template is a symlink to project-specific persistent storage on the mounted Hyperdisk, keeping large datasets and workflow outputs separated from the VM boot disk. See the [Processing VM Setup](gcp-processing-vm.html#configure-project-workspace) page for the full workspace initialization steps.
-
-Periodically review the template repository for updates to the standard project structure.
-
-## How to Use a Template
-
-1. **Go to the template repo** on GitHub and click **"Use this template" → "Create a new repository"**.
-2. **Name your repo** following the project naming convention (e.g. `viirs-netpp`, `seaice-sst`).
-3. **Clone your new repo** to your local machine or VM:
-
-```{.bash}
-git clone https://github.com/erd-coastwatch/YOUR_NEW_REPO.git
-cd YOUR_NEW_REPO
-```
-
-4. **Fill in `config.yml`** with your project-specific settings — sensor names, GCS bucket paths, date ranges, and any API parameters.
-5. **Add your scripts and notebooks** to the appropriate directories.
-6. For Cloud Run projects, **build and deploy** using `deploy_job.sh` once your Dockerfile and scripts are ready.
-
-::: {.callout-note}
-These templates are intentionally minimal — they provide structure, not implementation. Each project fills in the logic specific to its data source and processing requirements.
-:::
+Open the [Cloud Run template](https://github.com/erd-coastwatch/cloud-run-template) or [processing VM template](https://github.com/erd-coastwatch/vm-dataproc-template) on GitHub. Select **Use this template → Create a new repository**, choose the repository owner and name, and create it. Clone your new repository, then replace the example configuration and files with your workflow’s code and settings. Review any deployment script before running it against your GCP project.

@@ -73,7 +73,7 @@ ERDDAP does not require a processing VM or Cloud Run. Use these chapters only wh
 
   <div class="file-card">
     <h3>Data Processing Templates</h3>
-    <p>Optional SWFSC repository structures for Cloud Run Jobs and VM-based processing projects.</p>
+    <p>Two public, sanitized GitHub templates for Cloud Run Jobs and VM-based processing projects.</p>
     <ul>
       <li><a href="gcp-templates.html">Review processing templates</a></li>
     </ul>
