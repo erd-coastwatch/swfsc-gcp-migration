@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>GCP Data Processing Templates – ERDDAP on Google Cloud</title>
+<title>Public Data Processing Templates – ERDDAP on Google Cloud</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,41 +19,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -119,7 +84,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">GCP Data Processing Templates</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">Public Data Processing Templates</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -210,7 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">GCP Data Processing Templates</span></a>
+  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Public Data Processing Templates</span></a>
   </div>
 </li>
       </ul>
@@ -885,21 +850,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#template-repositories" id="toc-template-repositories" class="nav-link active" data-scroll-target="#template-repositories">Template Repositories</a>
-  <ul class="collapse">
-  <li><a href="#cloud-run-template" id="toc-cloud-run-template" class="nav-link" data-scroll-target="#cloud-run-template">Cloud Run Template</a></li>
-  <li><a href="#dataproc-vm-template" id="toc-dataproc-vm-template" class="nav-link" data-scroll-target="#dataproc-vm-template">Dataproc / VM Template</a></li>
-  </ul></li>
-  <li><a href="#how-to-use-a-template" id="toc-how-to-use-a-template" class="nav-link" data-scroll-target="#how-to-use-a-template">How to Use a Template</a></li>
+  <li><a href="#cloud-run-job-template" id="toc-cloud-run-job-template" class="nav-link active" data-scroll-target="#cloud-run-job-template">Cloud Run Job template</a></li>
+  <li><a href="#processing-vm-template" id="toc-processing-vm-template" class="nav-link" data-scroll-target="#processing-vm-template">Processing VM template</a></li>
+  <li><a href="#create-a-repository-from-a-template" id="toc-create-a-repository-from-a-template" class="nav-link" data-scroll-target="#create-a-repository-from-a-template">Create a repository from a template</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">GCP Data Processing Templates</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">Public Data Processing Templates</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">GCP Data Processing Templates</span></h1>
+<h1 class="title"><span class="chapter-title">Public Data Processing Templates</span></h1>
 </div>
 
 
@@ -916,75 +878,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>To support consistent, reproducible workflows across projects, SWFSC CoastWatch maintains two GitHub template repositories. These templates provide a standardized starting point for new data processing projects deployed on Google Cloud Platform.</p>
-<section id="template-repositories" class="level2">
-<h2 class="anchored" data-anchor-id="template-repositories">Template Repositories</h2>
-<section id="cloud-run-template" class="level3">
-<h3 class="anchored" data-anchor-id="cloud-run-template">Cloud Run Template</h3>
-<p><strong>Repository:</strong> <a href="https://github.com/erd-coastwatch/cloud-run-template">erd-coastwatch/cloud-run-template</a></p>
-<p>Use this template for containerized batch processing jobs deployed on <strong>Google Cloud Run</strong>. It follows the same structure used by the VIIRS NetPP, MUR SST, and CHARM workflows and is designed for jobs that run on a schedule or on demand, process data, and write results to GCS.</p>
-<pre class="text"><code>cloud-run-template/
-├── config/
-│   ├── config.yml          # Runtime settings (sensors, GCS paths, API keys)
-│   └── requirements.txt    # Python dependencies
-├── deploy_job.sh           # Build, push, and deploy the Cloud Run job
-├── Dockerfile              # Container definition
-├── entrypoint.sh           # Job mode selector
-├── scripts/                # Processing and orchestration logic
-└── templates/              # CDL or other output templates</code></pre>
+<p>SWFSC CoastWatch maintains two <strong>public, sanitized GitHub templates</strong> for groups that also process data on GCP. They are optional starting points: an ERDDAP deployment does not need either template. Each repository contains example files and placeholders that must be adapted to the new project.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Template</th>
+<th>Choose it when</th>
+<th>Repository</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cloud Run Job</td>
+<td>A container should run a batch workflow on demand or on a schedule.</td>
+<td><a href="https://github.com/erd-coastwatch/cloud-run-template">cloud-run-template</a></td>
+</tr>
+<tr class="even">
+<td>Processing VM</td>
+<td>A workflow runs directly on a VM, with scripts, notebooks, and a persistent workspace.</td>
+<td><a href="https://github.com/erd-coastwatch/vm-dataproc-template">vm-dataproc-template</a></td>
+</tr>
+</tbody>
+</table>
+<section id="cloud-run-job-template" class="level2">
+<h2 class="anchored" data-anchor-id="cloud-run-job-template">Cloud Run Job template</h2>
+<p>The <a href="https://github.com/erd-coastwatch/cloud-run-template">Cloud Run template</a> includes a <code>Dockerfile</code>, <code>entrypoint.sh</code>, <code>deploy_job.sh</code>, and example <code>config/</code>, <code>scripts/</code>, <code>src/</code>, and <code>templates/</code> directories. Its deployment script contains project, region, image, service account, and secret placeholders. Review the entire script and replace those values before running it; it can create cloud resources and deploy a job.</p>
+<p>Start with the repository’s <a href="https://github.com/erd-coastwatch/cloud-run-template/blob/main/README.md">README</a>, then use <strong>Use this template</strong> on GitHub to create a repository for your workflow. Add your processing code, configure its GCP identity and storage permissions, and review the deployment script against your organization’s infrastructure ownership.</p>
 </section>
-<section id="dataproc-vm-template" class="level3">
-<h3 class="anchored" data-anchor-id="dataproc-vm-template">Dataproc / VM Template</h3>
-<p><strong>Repository:</strong> <a href="https://github.com/erd-coastwatch/vm-dataproc-template">erd-coastwatch/vm-dataproc-template</a></p>
-<p>Use this template for interactive or long-running workflows that run directly on a <strong>Dataproc or processing VM</strong>. It is structured for projects that combine notebooks, scripts, and reusable Python modules, with access to GCS-mounted data.</p>
-<pre class="text"><code>vm-dataproc-template/
-├── README.md               # Project overview and setup instructions
-├── environment.yml         # Conda environment
-├── config.yml              # Configuration file
-├── LICENSE
-├── notebooks/              # Jupyter notebooks for exploration and analysis
-├── scripts/                # Shell and Python workflow scripts
-├── src/                    # Reusable Python modules and helpers
-├── data/                   # Symlink to persistent storage on the mounted processing disk
-├── templates/              # CDL or CSV template files
-├── resources/              # Misc reference files used during processing
-├── logs/                   # Runtime logs
-├── docs/                   # Documentation (Quarto or Sphinx)
-└── tests/                  # Unit tests</code></pre>
-<p>GCS mount points follow the convention:</p>
-<pre class="text"><code>/mnt/gcs/data/&lt;project&gt;/           # Large input data
-/mnt/gcs/erddap_data_pw/&lt;project&gt;/ # ERDDAP-served output data</code></pre>
-<p>The <code>data/</code> directory in the template is a symlink to project-specific persistent storage on the mounted Hyperdisk, keeping large datasets and workflow outputs separated from the VM boot disk. See the <a href="gcp-processing-vm.html#configure-project-workspace">Processing VM Setup</a> page for the full workspace initialization steps.</p>
-<p>Periodically review the template repository for updates to the standard project structure.</p>
+<section id="processing-vm-template" class="level2">
+<h2 class="anchored" data-anchor-id="processing-vm-template">Processing VM template</h2>
+<p>The <a href="https://github.com/erd-coastwatch/vm-dataproc-template">processing VM template</a> provides example <code>config/</code>, <code>notebooks/</code>, <code>scripts/</code>, <code>src/</code>, <code>data/</code>, <code>docs/</code>, <code>logs/</code>, <code>templates/</code>, and <code>tests/</code> directories. Its <code>data/</code> directory contains an example file; it is <strong>not</strong> a preconfigured link to a persistent disk. Choose the storage layout and mount paths appropriate for your project.</p>
+<p>First establish the VM, disk, service account, and required storage access using <a href="./gcp-processing-vm.html">Optional Processing VM Setup</a>. Then follow the template’s <a href="https://github.com/erd-coastwatch/vm-dataproc-template/blob/main/README.md">README</a> and use <strong>Use this template</strong> to create your workflow repository. The template organizes code and documentation; it does not provision a VM or install a scientific environment.</p>
 </section>
-</section>
-<section id="how-to-use-a-template" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-use-a-template">How to Use a Template</h2>
-<ol type="1">
-<li><strong>Go to the template repo</strong> on GitHub and click <strong>“Use this template” → “Create a new repository”</strong>.</li>
-<li><strong>Name your repo</strong> following the project naming convention (e.g.&nbsp;<code>viirs-netpp</code>, <code>seaice-sst</code>).</li>
-<li><strong>Clone your new repo</strong> to your local machine or VM:</li>
-</ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/erd-coastwatch/YOUR_NEW_REPO.git</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> YOUR_NEW_REPO</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<ol start="4" type="1">
-<li><strong>Fill in <code>config.yml</code></strong> with your project-specific settings — sensor names, GCS bucket paths, date ranges, and any API parameters.</li>
-<li><strong>Add your scripts and notebooks</strong> to the appropriate directories.</li>
-<li>For Cloud Run projects, <strong>build and deploy</strong> using <code>deploy_job.sh</code> once your Dockerfile and scripts are ready.</li>
-</ol>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>These templates are intentionally minimal — they provide structure, not implementation. Each project fills in the logic specific to its data source and processing requirements.</p>
-</div>
-</div>
+<section id="create-a-repository-from-a-template" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-repository-from-a-template">Create a repository from a template</h2>
+<p>Open the <a href="https://github.com/erd-coastwatch/cloud-run-template">Cloud Run template</a> or <a href="https://github.com/erd-coastwatch/vm-dataproc-template">processing VM template</a> on GitHub. Select <strong>Use this template → Create a new repository</strong>, choose the repository owner and name, and create it. Clone your new repository, then replace the example configuration and files with your workflow’s code and settings. Review any deployment script before running it against your GCP project.</p>
 
 
 </section>
