@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Public Data Processing Templates – ERDDAP on Google Cloud</title>
+<title>Optional Website Redirect with Apache – ERDDAP on Google Cloud</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -30,8 +65,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./mh1-processor.html" rel="next">
-<link href="./gcp-processing-vm.html" rel="prev">
+<link href="./gcp-migration-recovery.html" rel="next">
+<link href="./gcp-erddap-vm.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -84,7 +119,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">Public Data Processing Templates</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./gcp-website-redirect.html"><span class="chapter-title">Optional Website Redirect with Apache</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -154,7 +189,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./gcp-website-redirect.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Optional Website Redirect with Apache</span></a>
+  <a href="./gcp-website-redirect.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Optional Website Redirect with Apache</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -180,7 +215,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Public Data Processing Templates</span></a>
+  <a href="./gcp-templates.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Public Data Processing Templates</span></a>
   </div>
 </li>
       </ul>
@@ -855,18 +890,22 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#cloud-run-job-template" id="toc-cloud-run-job-template" class="nav-link active" data-scroll-target="#cloud-run-job-template">Cloud Run Job template</a></li>
-  <li><a href="#processing-vm-template" id="toc-processing-vm-template" class="nav-link" data-scroll-target="#processing-vm-template">Processing VM template</a></li>
-  <li><a href="#create-a-repository-from-a-template" id="toc-create-a-repository-from-a-template" class="nav-link" data-scroll-target="#create-a-repository-from-a-template">Create a repository from a template</a></li>
+  <li><a href="#what-this-adds" id="toc-what-this-adds" class="nav-link active" data-scroll-target="#what-this-adds">What This Adds</a></li>
+  <li><a href="#confirm-the-starting-point" id="toc-confirm-the-starting-point" class="nav-link" data-scroll-target="#confirm-the-starting-point">1. Confirm the Starting Point</a></li>
+  <li><a href="#set-up-apache" id="toc-set-up-apache" class="nav-link" data-scroll-target="#set-up-apache">2. Set Up Apache</a></li>
+  <li><a href="#test-apache-locally" id="toc-test-apache-locally" class="nav-link" data-scroll-target="#test-apache-locally">3. Test Apache Locally</a></li>
+  <li><a href="#add-apache-to-the-load-balancer" id="toc-add-apache-to-the-load-balancer" class="nav-link" data-scroll-target="#add-apache-to-the-load-balancer">4. Add Apache to the Load Balancer</a></li>
+  <li><a href="#test-through-the-load-balancer" id="toc-test-through-the-load-balancer" class="nav-link" data-scroll-target="#test-through-the-load-balancer">5. Test Through the Load Balancer</a></li>
+  <li><a href="#check-requests-and-finish" id="toc-check-requests-and-finish" class="nav-link" data-scroll-target="#check-requests-and-finish">6. Check Requests and Finish</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-processing-vm.html">Optional Processing Infrastructure</a></li><li class="breadcrumb-item"><a href="./gcp-templates.html"><span class="chapter-title">Public Data Processing Templates</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gcp-setup.html">Deploy ERDDAP on GCP</a></li><li class="breadcrumb-item"><a href="./gcp-website-redirect.html"><span class="chapter-title">Optional Website Redirect with Apache</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Public Data Processing Templates</span></h1>
+<h1 class="title"><span class="chapter-title">Optional Website Redirect with Apache</span></h1>
 </div>
 
 
@@ -883,43 +922,296 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>SWFSC CoastWatch maintains two <strong>public, sanitized GitHub templates</strong> for groups that also process data on GCP. They are optional starting points: an ERDDAP deployment does not need either template. Each repository contains example files and placeholders that must be adapted to the new project.</p>
+<p>This optional chapter shows how we added a website entry point to an existing ERDDAP deployment. It uses one Ubuntu VM, one ERDDAP service, and one website hosted on GitHub Pages.</p>
+<p>Complete <a href="./gcp-erddap-vm.html">ERDDAP VM Setup</a> first. Skip this chapter if your group only needs ERDDAP.</p>
+<section id="what-this-adds" class="level3">
+<h3 class="anchored" data-anchor-id="what-this-adds">What This Adds</h3>
+<p>GitHub Pages hosts the website and its assets. Apache runs on the ERDDAP VM and sends website visitors a redirect to GitHub Pages. The load balancer continues sending ERDDAP requests directly to Tomcat.</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Template</th>
-<th>Choose it when</th>
-<th>Repository</th>
+<th>Requested address</th>
+<th>What happens</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Cloud Run Job</td>
-<td>A container should run a batch workflow on demand or on a schedule.</td>
-<td><a href="https://github.com/erd-coastwatch/cloud-run-template">cloud-run-template</a></td>
+<td><code>https://YOUR_HOSTNAME/</code></td>
+<td>Apache redirects the browser to the GitHub Pages website.</td>
 </tr>
 <tr class="even">
-<td>Processing VM</td>
-<td>A workflow runs directly on a VM, with scripts, notebooks, and a persistent workspace.</td>
-<td><a href="https://github.com/erd-coastwatch/vm-dataproc-template">vm-dataproc-template</a></td>
+<td><code>https://YOUR_HOSTNAME/erddap/</code></td>
+<td>The load balancer sends the request to ERDDAP.</td>
 </tr>
 </tbody>
 </table>
-<section id="cloud-run-job-template" class="level2">
-<h2 class="anchored" data-anchor-id="cloud-run-job-template">Cloud Run Job template</h2>
-<p>The <a href="https://github.com/erd-coastwatch/cloud-run-template">Cloud Run template</a> includes a <code>Dockerfile</code>, <code>entrypoint.sh</code>, <code>deploy_job.sh</code>, and example <code>config/</code>, <code>scripts/</code>, <code>src/</code>, and <code>templates/</code> directories. Its deployment script contains project, region, image, service account, and secret placeholders. Review the entire script and replace those values before running it; it can create cloud resources and deploy a job.</p>
-<p>Start with the repository’s <a href="https://github.com/erd-coastwatch/cloud-run-template/blob/main/README.md">README</a>, then use <strong>Use this template</strong> on GitHub to create a repository for your workflow. Add your processing code, configure its GCP identity and storage permissions, and review the deployment script against your organization’s infrastructure ownership.</p>
+<p>Apache adds a small resource overhead. After the redirect, website browsing takes place directly on GitHub. <strong>The browser’s address bar changes to the GitHub website address.</strong></p>
 </section>
-<section id="processing-vm-template" class="level2">
-<h2 class="anchored" data-anchor-id="processing-vm-template">Processing VM template</h2>
-<p>The <a href="https://github.com/erd-coastwatch/vm-dataproc-template">processing VM template</a> provides example <code>config/</code>, <code>notebooks/</code>, <code>scripts/</code>, <code>src/</code>, <code>data/</code>, <code>docs/</code>, <code>logs/</code>, <code>templates/</code>, and <code>tests/</code> directories. Its <code>data/</code> directory contains an example file; it is <strong>not</strong> a preconfigured link to a persistent disk. Choose the storage layout and mount paths appropriate for your project.</p>
-<p>First establish the VM, disk, service account, and required storage access using <a href="./gcp-processing-vm.html">Optional Processing VM Setup</a>. Then follow the template’s <a href="https://github.com/erd-coastwatch/vm-dataproc-template/blob/main/README.md">README</a> and use <strong>Use this template</strong> to create your workflow repository. The template organizes code and documentation; it does not provision a VM or install a scientific environment.</p>
+<section id="confirm-the-starting-point" class="level3">
+<h3 class="anchored" data-anchor-id="confirm-the-starting-point">1. Confirm the Starting Point</h3>
+<p>This example assumes:</p>
+<ul>
+<li>an Ubuntu VM already running ERDDAP through Tomcat on port <strong>8080</strong>;</li>
+<li>a working <strong>regional Application Load Balancer</strong> with an HTTPS frontend on port <strong>443</strong>;</li>
+<li>a <strong>zonal instance group</strong> containing the ERDDAP VM;</li>
+<li>one hostname already configured on the load balancer;</li>
+<li>a published GitHub Pages website.</li>
+</ul>
+<p>Apache will listen on HTTP port <strong>80</strong>. HTTPS and its certificate remain on the load balancer.</p>
+<p>On the ERDDAP VM, check the existing listeners and confirm ERDDAP works:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ss <span class="at">-ltnp</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">':(80|8080)[[:space:]]'</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSI</span> http://127.0.0.1:8080/erddap/status.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If something already uses port 80, inspect it before continuing. If Apache is already installed, review its enabled sites:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apache2ctl <span class="at">-S</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ls <span class="at">-l</span> /etc/apache2/sites-enabled/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In Google Cloud, identify the existing instance group, Tomcat named port, ERDDAP backend service, and URL map. Keep the existing ERDDAP configuration in place while adding Apache.</p>
+<p>When networking is managed by Terraform or another team, make the load-balancer and firewall changes through that configuration or team. See <a href="./gcp-infrastructure.html">Cloud Infrastructure Setup</a>.</p>
 </section>
-<section id="create-a-repository-from-a-template" class="level2">
-<h2 class="anchored" data-anchor-id="create-a-repository-from-a-template">Create a repository from a template</h2>
-<p>Open the <a href="https://github.com/erd-coastwatch/cloud-run-template">Cloud Run template</a> or <a href="https://github.com/erd-coastwatch/vm-dataproc-template">processing VM template</a> on GitHub. Select <strong>Use this template → Create a new repository</strong>, choose the repository owner and name, and create it. Clone your new repository, then replace the example configuration and files with your workflow’s code and settings. Review any deployment script before running it against your GCP project.</p>
+<section id="set-up-apache" class="level3">
+<h3 class="anchored" data-anchor-id="set-up-apache">2. Set Up Apache</h3>
+<p>Run these commands <strong>on the ERDDAP VM</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="at">-y</span> apache2</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> a2enmod rewrite</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> install <span class="at">-d</span> <span class="at">-o</span> root <span class="at">-g</span> root <span class="at">-m</span> 0755 /var/www/website-redirect</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">'ok\n'</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /var/www/website-redirect/healthz <span class="op">&gt;</span>/dev/null</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 0644 /var/www/website-redirect/healthz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The small <code>/healthz</code> file gives the load balancer a page that returns HTTP 200.</p>
+<p>Create a dedicated site configuration. If this file already exists, review and back it up before replacing it:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/apache2/sites-available/website-redirect.conf <span class="op">&gt;</span>/dev/null <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;VirtualHost *:80&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="st">    ServerName YOUR_HOSTNAME</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">    DocumentRoot /var/www/website-redirect</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;Directory /var/www/website-redirect&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">        Options -Indexes</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">        AllowOverride None</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">        Require all granted</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/Directory&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="st">    RewriteEngine On</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="st">    RewriteCond %{REQUEST_URI} !^/erddap(/|$) [NC]</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="st">    RewriteCond %{REQUEST_URI} !^/healthz(/|$) [NC]</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="st">    RewriteRule ^/(.*)$ https://YOUR_GITHUB_PAGES_HOST/YOUR_REPOSITORY/$1 [R=302,L]</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="st">    ErrorLog ${APACHE_LOG_DIR}/website-redirect-error.log</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="st">    CustomLog ${APACHE_LOG_DIR}/website-redirect-access.log combined</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;/VirtualHost&gt;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="ex">sudoedit</span> /etc/apache2/sites-available/website-redirect.conf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Replace <code>YOUR_HOSTNAME</code> with the hostname on the load balancer. Replace <code>https://YOUR_GITHUB_PAGES_HOST/YOUR_REPOSITORY/</code> with your website’s actual published base URL. If the website is at the host root, remove <code>YOUR_REPOSITORY/</code>.</p>
+<p>The <code>$1</code> carries the requested website path to GitHub. For example, <code>/about.html</code> redirects to the website’s <code>about.html</code> page. Keep <strong>302</strong> while testing so browsers do not permanently cache the destination.</p>
+<p><code>/healthz</code> is excluded from the redirect so the health check works. <code>/erddap</code> is also excluded, but Apache does not proxy it: <strong>the load balancer routes ERDDAP requests to Tomcat</strong>.</p>
+<p>Enable the new site:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> a2ensite website-redirect.conf</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># On a dedicated VM, disable the unused Ubuntu default site</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> a2dissite 000-default.conf</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apache2ctl configtest <span class="kw">&amp;&amp;</span> <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> systemctl enable <span class="at">--now</span> apache2 <span class="kw">&amp;&amp;</span> <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> systemctl reload apache2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Disable the default site only if it is unused. This example assumes the redirect site is the VM’s only Apache site. Confirm Apache is listening on port 80 and that <code>configtest</code> reports <code>Syntax OK</code>.</p>
+</section>
+<section id="test-apache-locally" class="level3">
+<h3 class="anchored" data-anchor-id="test-apache-locally">3. Test Apache Locally</h3>
+<p>On the VM, substitute the hostname configured in Apache:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="at">-D</span> <span class="at">-</span> <span class="at">-H</span> <span class="st">'Host: YOUR_HOSTNAME'</span> http://127.0.0.1/healthz</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sS</span> <span class="at">-D</span> <span class="at">-</span> <span class="at">-o</span> /dev/null <span class="at">-H</span> <span class="st">'Host: YOUR_HOSTNAME'</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  http://127.0.0.1/</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sS</span> <span class="at">-D</span> <span class="at">-</span> <span class="at">-o</span> /dev/null <span class="at">-H</span> <span class="st">'Host: YOUR_HOSTNAME'</span> <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  http://127.0.0.1/YOUR_EXISTING_WEBSITE_PAGE.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Expect HTTP <strong>200</strong> and <code>ok</code> for <code>/healthz</code>. The other requests should return <strong>302</strong>, with a <code>Location</code> header pointing to the correct GitHub address. Use a real website page for the final test.</p>
+<p>Also confirm the health check works without a hostname header:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="at">-D</span> <span class="at">-</span> http://127.0.0.1/healthz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="add-apache-to-the-load-balancer" class="level3">
+<h3 class="anchored" data-anchor-id="add-apache-to-the-load-balancer">4. Add Apache to the Load Balancer</h3>
+<p>Make these changes in <strong>Google Cloud Console or the infrastructure configuration that owns the load balancer</strong>. The existing ERDDAP backend remains in use.</p>
+<section id="add-the-apache-backend" class="level4">
+<h4 class="anchored" data-anchor-id="add-the-apache-backend">4.1 Add the Apache backend</h4>
+<ol type="1">
+<li>In the VM’s instance group, keep all existing named ports and add <strong><code>apache:80</code></strong>.</li>
+<li>Create a <strong>regional HTTP health check</strong>, using port <strong>80</strong> and request path <strong><code>/healthz</code></strong>.</li>
+<li>Create a separate <strong>regional HTTP backend service</strong> for Apache. Use the same load-balancing scheme as the existing ERDDAP backend and select the named port <strong><code>apache</code></strong>.</li>
+<li>Attach the existing instance group. Use a balancing mode compatible with its existing ERDDAP attachment.</li>
+</ol>
+<p>Named-port updates replace the port list when performed with <code>gcloud set-named-ports</code>, so retain the Tomcat entry and every other existing entry. Configure Apache on every VM in the group if it contains more than one VM.</p>
+</section>
+<section id="allow-traffic-to-apache" class="level4">
+<h4 class="anchored" data-anchor-id="allow-traffic-to-apache">4.2 Allow traffic to Apache</h4>
+<p>Add GCP ingress firewall access to TCP <strong>80</strong> from these sources:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>35.191.0.0/16</code> and <code>130.211.0.0/22</code></td>
+<td>Google health checks</td>
+</tr>
+<tr class="even">
+<td>The load balancer’s active proxy-only subnet</td>
+<td>Requests forwarded by the regional load balancer</td>
+</tr>
+</tbody>
+</table>
+<p>Use the proxy-only subnet belonging to the load balancer’s <strong>VPC and region</strong>. Its address range is specific to your deployment.</p>
+<p>Scope the rules to the intended backend VM using the team’s network tags or service-account targets. Keep the existing port-8080 firewall rules for ERDDAP.</p>
+<p>If the VM uses an active UFW firewall, allow the same sources locally:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Add these rules when UFW is active</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from 35.191.0.0/16 <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 80</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from 130.211.0.0/22 <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 80</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow proto tcp from YOUR_PROXY_ONLY_SUBNET_CIDR <span class="dt">\</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  to YOUR_ERDDAP_INTERNAL_IP port 80</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check the new Apache backend in Google Cloud. <strong>Wait until it reports HEALTHY before changing routing.</strong></p>
+</section>
+<section id="set-the-hostnames-routes" class="level4">
+<h4 class="anchored" data-anchor-id="set-the-hostnames-routes">4.3 Set the hostname’s routes</h4>
+<p>Before editing, save a backup of the URL map. From Cloud Shell or an administrative workstation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> compute url-maps export YOUR_URL_MAP <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--project</span><span class="op">=</span>YOUR_GCP_PROJECT_ID <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--region</span><span class="op">=</span>YOUR_GCP_REGION <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--destination</span><span class="op">=</span>url-map-before-apache.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For your hostname, edit its path matcher to use these destinations:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Match</th>
+<th>Backend</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/erddap</code> and <code>/erddap/*</code></td>
+<td>Existing ERDDAP backend on port 8080</td>
+</tr>
+<tr class="even">
+<td>Default for this hostname</td>
+<td>New Apache backend on port 80</td>
+</tr>
+</tbody>
+</table>
+<p>Both ERDDAP path entries are needed. The hostname’s default also sends <code>/healthz</code> to Apache.</p>
+<p>Change only the intended hostname’s routing. Preserve the URL map’s top-level default and any other host rules. If its host rule or path matcher is shared with other hostnames, have the infrastructure owner separate this hostname before changing its destinations.</p>
+</section>
+</section>
+<section id="test-through-the-load-balancer" class="level3">
+<h3 class="anchored" data-anchor-id="test-through-the-load-balancer">5. Test Through the Load Balancer</h3>
+<section id="test-before-public-dns-is-ready" class="level4">
+<h4 class="anchored" data-anchor-id="test-before-public-dns-is-ready">5.1 Test before public DNS is ready</h4>
+<p>During migration, public DNS may still point to the old server. A temporary entry in your computer’s <strong>hosts file</strong> lets you test the new deployment using its hostname and the load balancer’s public IP.</p>
+<p>If that IP is already reachable from the internet, this lets you test <strong>without being connected to the VPN</strong>. The hosts entry provides name resolution; it does not make a private frontend publicly reachable.</p>
+<p>On macOS or Linux, open the hosts file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/hosts</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add one entry for each hostname configured on the load balancer. If your website and ERDDAP use separate hostnames, both point to the same public IP:</p>
+<pre class="text"><code>YOUR_PUBLIC_LOAD_BALANCER_IP YOUR_WEBSITE_HOSTNAME
+YOUR_PUBLIC_LOAD_BALANCER_IP YOUR_ERDDAP_HOSTNAME</code></pre>
+<p>If they share one hostname—website at <code>/</code> and ERDDAP at <code>/erddap/</code>—only one entry is needed.</p>
+<p>Enter hostnames only, without <code>https://</code> or <code>/erddap/</code>.</p>
+<p>Save with <strong>Control+O</strong>, press <strong>Enter</strong>, and exit with <strong>Control+X</strong>. Your computer will now send requests for that hostname to the new load-balancer IP.</p>
+<p>Keeping the hostname in the address allows the load balancer to select the correct backend. Use the hostname in your browser rather than the IP alone.</p>
+</section>
+<section id="verify-the-website-and-erddap" class="level4">
+<h4 class="anchored" data-anchor-id="verify-the-website-and-erddap">5.2 Verify the website and ERDDAP</h4>
+<p>Open these addresses in your browser:</p>
+<pre class="text"><code>https://YOUR_HOSTNAME/
+https://YOUR_HOSTNAME/healthz
+https://YOUR_HOSTNAME/erddap/status.html</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Address</th>
+<th>Expected result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/</code></td>
+<td>Redirect to GitHub Pages; the browser address changes.</td>
+</tr>
+<tr class="even">
+<td><code>/healthz</code></td>
+<td>Display <code>ok</code> from Apache.</td>
+</tr>
+<tr class="odd">
+<td><code>/erddap/status.html</code></td>
+<td>Display the ERDDAP status page.</td>
+</tr>
+</tbody>
+</table>
+<p>For a command-line test without changing the hosts file, use <code>curl --resolve</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-I</span> <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolve</span> YOUR_HOSTNAME:443:YOUR_PUBLIC_LOAD_BALANCER_IP <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  https://YOUR_HOSTNAME/erddap/status.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If a staging certificate is not yet valid or trusted, adding <code>-k</code> temporarily lets you test routing while skipping certificate verification. Production HTTPS checks must succeed without <code>-k</code>.</p>
+</section>
+</section>
+<section id="check-requests-and-finish" class="level3">
+<h3 class="anchored" data-anchor-id="check-requests-and-finish">6. Check Requests and Finish</h3>
+<p>On the VM, follow the Apache access log:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tail <span class="at">-f</span> /var/log/apache2/website-redirect-access.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You should see periodic <code>/healthz</code> requests and the initial website request returning 302. Later website clicks happen on GitHub and do not appear here. ERDDAP requests bypass Apache.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>First check</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Apache backend is unhealthy</td>
+<td>Apache is running on port 80, <code>/healthz</code> returns 200, and both GCP and local firewalls allow the required sources.</td>
+</tr>
+<tr class="even">
+<td>Website or ERDDAP reaches the wrong destination</td>
+<td>The hostname’s default backend and both ERDDAP path rules.</td>
+</tr>
+<tr class="odd">
+<td>Certificate error</td>
+<td>The HTTPS frontend’s certificate matches the hostname and is trusted by the client.</td>
+</tr>
+</tbody>
+</table>
+<p>Once DNS points to the new load balancer, remove the temporary hosts entry and repeat the browser tests. Confirm production DNS and HTTPS both work.</p>
+<p>Keep 302 while the GitHub destination may change. Once it is settled, optionally change <code>[R=302,L]</code> to <code>[R=301,L]</code>, run <code>sudo apache2ctl configtest</code>, and reload Apache. A 301 can be cached by browsers.</p>
+<p>Include the Apache site configuration in the team’s configuration backup, and verify Apache starts after reboot. Continue to <a href="./gcp-migration-recovery.html">Go-Live Checklist and Recovery Basics</a>.</p>
+<section id="official-references" class="level4">
+<h4 class="anchored" data-anchor-id="official-references">Official references</h4>
+<ul>
+<li><a href="https://ubuntu.com/server/docs/how-to/web-services/install-apache2/">Ubuntu Apache installation</a></li>
+<li><a href="https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html">Apache rewrite rules</a></li>
+<li><a href="https://docs.cloud.google.com/load-balancing/docs/backend-service">Google Cloud backend services</a></li>
+<li><a href="https://docs.cloud.google.com/load-balancing/docs/firewall-rules">Load-balancer firewall rules</a></li>
+<li><a href="https://docs.cloud.google.com/load-balancing/docs/url-map">URL-map routing</a></li>
+</ul>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1327,13 +1619,13 @@ ul.task-list li input[type="checkbox"] {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./gcp-processing-vm.html" class="pagination-link" aria-label="Optional Processing VM Setup">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Optional Processing VM Setup</span></span>
+      <a href="./gcp-erddap-vm.html" class="pagination-link" aria-label="ERDDAP VM Setup">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">ERDDAP VM Setup</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./mh1-processor.html" class="pagination-link" aria-label="MH1 / MPOC / MPIC Processor">
-        <span class="nav-page-text"><span class="chapter-title">MH1 / MPOC / MPIC Processor</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./gcp-migration-recovery.html" class="pagination-link" aria-label="Go-Live Checklist and Recovery Basics">
+        <span class="nav-page-text"><span class="chapter-title">Go-Live Checklist and Recovery Basics</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

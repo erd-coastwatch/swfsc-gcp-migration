@@ -73,6 +73,7 @@ These chapters form the reusable deployment path:
 - [Cloud Infrastructure Setup](gcp-infrastructure.qmd)
 - [Accessing VMs](gcp-vm-access.qmd)
 - [ERDDAP VM Setup](gcp-erddap-vm.qmd)
+- [Optional Website Redirect with Apache](gcp-website-redirect.qmd)
 - [Go-Live Checklist and Recovery Basics](gcp-migration-recovery.qmd)
 
 ### Optional processing infrastructure

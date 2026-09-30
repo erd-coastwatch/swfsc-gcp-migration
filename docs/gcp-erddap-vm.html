@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./gcp-migration-recovery.html" rel="next">
+<link href="./gcp-website-redirect.html" rel="next">
 <link href="./gcp-vm-access.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -185,6 +185,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./gcp-erddap-vm.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">ERDDAP VM Setup</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gcp-website-redirect.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Optional Website Redirect with Apache</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1311,6 +1316,7 @@ Important
 <span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSI</span> http://127.0.0.1:8080/erddap/status.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Repeat the backend-health and public-HTTPS checks. The infrastructure setup is complete when the service recovers automatically after reboot.</p>
 <p>The ERDDAP administrator can then manage the production <code>datasets.xml</code> using the <a href="https://erddap.github.io/docs/server-admin/datasets">official datasets.xml documentation</a> and the team’s dataset-specific procedures. Production catalog authoring and dataset migration are intentionally outside this infrastructure guide.</p>
+<p>To also use the ERDDAP hostname as an entry point to a GitHub Pages website, continue to <a href="./gcp-website-redirect.html">Optional Website Redirect with Apache</a>. This integration is optional and follows the validated ERDDAP setup above.</p>
 </section>
 <section id="operational-reference-rclone-cache-refresh" class="level3">
 <h3 class="anchored" data-anchor-id="operational-reference-rclone-cache-refresh">Operational Reference: rclone Cache Refresh</h3>
@@ -1739,8 +1745,8 @@ Important
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./gcp-migration-recovery.html" class="pagination-link" aria-label="Go-Live Checklist and Recovery Basics">
-        <span class="nav-page-text"><span class="chapter-title">Go-Live Checklist and Recovery Basics</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./gcp-website-redirect.html" class="pagination-link" aria-label="Optional Website Redirect with Apache">
+        <span class="nav-page-text"><span class="chapter-title">Optional Website Redirect with Apache</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
