@@ -1,0 +1,283 @@
+---
+title: "Optional Website Redirect with Apache"
+---
+
+This optional chapter shows how we added a website entry point to an existing ERDDAP deployment. It uses one Ubuntu VM, one ERDDAP service, and one website hosted on GitHub Pages.
+
+Complete [ERDDAP VM Setup](gcp-erddap-vm.qmd) first. Skip this chapter if your group only needs ERDDAP.
+
+### What This Adds
+
+GitHub Pages hosts the website and its assets. Apache runs on the ERDDAP VM and sends website visitors a redirect to GitHub Pages. The load balancer continues sending ERDDAP requests directly to Tomcat.
+
+| Requested address | What happens |
+|---|---|
+| `https://YOUR_HOSTNAME/` | Apache redirects the browser to the GitHub Pages website. |
+| `https://YOUR_HOSTNAME/erddap/` | The load balancer sends the request to ERDDAP. |
+
+Apache adds a small resource overhead. After the redirect, website browsing takes place directly on GitHub. **The browser's address bar changes to the GitHub website address.**
+
+### 1. Confirm the Starting Point
+
+This example assumes:
+
+- an Ubuntu VM already running ERDDAP through Tomcat on port **8080**;
+- a working **regional Application Load Balancer** with an HTTPS frontend on port **443**;
+- a **zonal instance group** containing the ERDDAP VM;
+- one hostname already configured on the load balancer;
+- a published GitHub Pages website.
+
+Apache will listen on HTTP port **80**. HTTPS and its certificate remain on the load balancer.
+
+On the ERDDAP VM, check the existing listeners and confirm ERDDAP works:
+
+```{.bash}
+sudo ss -ltnp | grep -E ':(80|8080)[[:space:]]'
+curl -fsSI http://127.0.0.1:8080/erddap/status.html
+```
+
+If something already uses port 80, inspect it before continuing. If Apache is already installed, review its enabled sites:
+
+```{.bash}
+sudo apache2ctl -S
+sudo ls -l /etc/apache2/sites-enabled/
+```
+
+In Google Cloud, identify the existing instance group, Tomcat named port, ERDDAP backend service, and URL map. Keep the existing ERDDAP configuration in place while adding Apache.
+
+When networking is managed by Terraform or another team, make the load-balancer and firewall changes through that configuration or team. See [Cloud Infrastructure Setup](gcp-infrastructure.qmd).
+
+### 2. Set Up Apache
+
+Run these commands **on the ERDDAP VM**:
+
+```{.bash}
+sudo apt-get update
+sudo apt-get install -y apache2
+sudo a2enmod rewrite
+
+sudo install -d -o root -g root -m 0755 /var/www/website-redirect
+printf 'ok\n' | sudo tee /var/www/website-redirect/healthz >/dev/null
+sudo chmod 0644 /var/www/website-redirect/healthz
+```
+
+The small `/healthz` file gives the load balancer a page that returns HTTP 200.
+
+Create a dedicated site configuration. If this file already exists, review and back it up before replacing it:
+
+```{.bash}
+sudo tee /etc/apache2/sites-available/website-redirect.conf >/dev/null <<'EOF'
+<VirtualHost *:80>
+    ServerName YOUR_HOSTNAME
+    DocumentRoot /var/www/website-redirect
+
+    <Directory /var/www/website-redirect>
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/erddap(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/healthz(/|$) [NC]
+    RewriteRule ^/(.*)$ https://YOUR_GITHUB_PAGES_HOST/YOUR_REPOSITORY/$1 [R=302,L]
+
+    ErrorLog ${APACHE_LOG_DIR}/website-redirect-error.log
+    CustomLog ${APACHE_LOG_DIR}/website-redirect-access.log combined
+</VirtualHost>
+EOF
+
+sudoedit /etc/apache2/sites-available/website-redirect.conf
+```
+
+Replace `YOUR_HOSTNAME` with the hostname on the load balancer. Replace `https://YOUR_GITHUB_PAGES_HOST/YOUR_REPOSITORY/` with your website's actual published base URL. If the website is at the host root, remove `YOUR_REPOSITORY/`.
+
+The `$1` carries the requested website path to GitHub. For example, `/about.html` redirects to the website's `about.html` page. Keep **302** while testing so browsers do not permanently cache the destination.
+
+`/healthz` is excluded from the redirect so the health check works. `/erddap` is also excluded, but Apache does not proxy it: **the load balancer routes ERDDAP requests to Tomcat**.
+
+Enable the new site:
+
+```{.bash}
+sudo a2ensite website-redirect.conf
+
+# On a dedicated VM, disable the unused Ubuntu default site
+sudo a2dissite 000-default.conf
+
+sudo apache2ctl configtest && \
+  sudo systemctl enable --now apache2 && \
+  sudo systemctl reload apache2
+```
+
+Disable the default site only if it is unused. This example assumes the redirect site is the VM's only Apache site. Confirm Apache is listening on port 80 and that `configtest` reports `Syntax OK`.
+
+### 3. Test Apache Locally
+
+On the VM, substitute the hostname configured in Apache:
+
+```{.bash}
+curl -fsS -D - -H 'Host: YOUR_HOSTNAME' http://127.0.0.1/healthz
+
+curl -sS -D - -o /dev/null -H 'Host: YOUR_HOSTNAME' \
+  http://127.0.0.1/
+
+curl -sS -D - -o /dev/null -H 'Host: YOUR_HOSTNAME' \
+  http://127.0.0.1/YOUR_EXISTING_WEBSITE_PAGE.html
+```
+
+Expect HTTP **200** and `ok` for `/healthz`. The other requests should return **302**, with a `Location` header pointing to the correct GitHub address. Use a real website page for the final test.
+
+Also confirm the health check works without a hostname header:
+
+```{.bash}
+curl -fsS -D - http://127.0.0.1/healthz
+```
+
+### 4. Add Apache to the Load Balancer
+
+Make these changes in **Google Cloud Console or the infrastructure configuration that owns the load balancer**. The existing ERDDAP backend remains in use.
+
+#### 4.1 Add the Apache backend
+
+1. In the VM's instance group, keep all existing named ports and add **`apache:80`**.
+2. Create a **regional HTTP health check**, using port **80** and request path **`/healthz`**.
+3. Create a separate **regional HTTP backend service** for Apache. Use the same load-balancing scheme as the existing ERDDAP backend and select the named port **`apache`**.
+4. Attach the existing instance group. Use a balancing mode compatible with its existing ERDDAP attachment.
+
+Named-port updates replace the port list when performed with `gcloud set-named-ports`, so retain the Tomcat entry and every other existing entry. Configure Apache on every VM in the group if it contains more than one VM.
+
+#### 4.2 Allow traffic to Apache
+
+Add GCP ingress firewall access to TCP **80** from these sources:
+
+| Source | Purpose |
+|---|---|
+| `35.191.0.0/16` and `130.211.0.0/22` | Google health checks |
+| The load balancer's active proxy-only subnet | Requests forwarded by the regional load balancer |
+
+Use the proxy-only subnet belonging to the load balancer's **VPC and region**. Its address range is specific to your deployment.
+
+Scope the rules to the intended backend VM using the team's network tags or service-account targets. Keep the existing port-8080 firewall rules for ERDDAP.
+
+If the VM uses an active UFW firewall, allow the same sources locally:
+
+```{.bash}
+sudo ufw status verbose
+
+# Add these rules when UFW is active
+sudo ufw allow proto tcp from 35.191.0.0/16 \
+  to YOUR_ERDDAP_INTERNAL_IP port 80
+sudo ufw allow proto tcp from 130.211.0.0/22 \
+  to YOUR_ERDDAP_INTERNAL_IP port 80
+sudo ufw allow proto tcp from YOUR_PROXY_ONLY_SUBNET_CIDR \
+  to YOUR_ERDDAP_INTERNAL_IP port 80
+```
+
+Check the new Apache backend in Google Cloud. **Wait until it reports HEALTHY before changing routing.**
+
+#### 4.3 Set the hostname's routes
+
+Before editing, save a backup of the URL map. From Cloud Shell or an administrative workstation:
+
+```{.bash}
+gcloud compute url-maps export YOUR_URL_MAP \
+  --project=YOUR_GCP_PROJECT_ID \
+  --region=YOUR_GCP_REGION \
+  --destination=url-map-before-apache.yaml
+```
+
+For your hostname, edit its path matcher to use these destinations:
+
+| Match | Backend |
+|---|---|
+| `/erddap` and `/erddap/*` | Existing ERDDAP backend on port 8080 |
+| Default for this hostname | New Apache backend on port 80 |
+
+Both ERDDAP path entries are needed. The hostname's default also sends `/healthz` to Apache.
+
+Change only the intended hostname's routing. Preserve the URL map's top-level default and any other host rules. If its host rule or path matcher is shared with other hostnames, have the infrastructure owner separate this hostname before changing its destinations.
+
+### 5. Test Through the Load Balancer
+
+#### 5.1 Test before public DNS is ready
+
+During migration, public DNS may still point to the old server. A temporary entry in your computer's **hosts file** lets you test the new deployment using its hostname and the load balancer's public IP.
+
+If that IP is already reachable from the internet, this lets you test **without being connected to the VPN**. The hosts entry provides name resolution; it does not make a private frontend publicly reachable.
+
+On macOS or Linux, open the hosts file:
+
+```{.bash}
+sudo nano /etc/hosts
+```
+
+Add one entry for each hostname configured on the load balancer. If your website and ERDDAP use separate hostnames, both point to the same public IP:
+
+```text
+YOUR_PUBLIC_LOAD_BALANCER_IP YOUR_WEBSITE_HOSTNAME
+YOUR_PUBLIC_LOAD_BALANCER_IP YOUR_ERDDAP_HOSTNAME
+```
+
+If they share one hostname—website at `/` and ERDDAP at `/erddap/`—only one entry is needed.
+
+Enter hostnames only, without `https://` or `/erddap/`.
+
+Save with **Control+O**, press **Enter**, and exit with **Control+X**. Your computer will now send requests for that hostname to the new load-balancer IP.
+
+Keeping the hostname in the address allows the load balancer to select the correct backend. Use the hostname in your browser rather than the IP alone.
+
+#### 5.2 Verify the website and ERDDAP
+
+Open these addresses in your browser:
+
+```text
+https://YOUR_HOSTNAME/
+https://YOUR_HOSTNAME/healthz
+https://YOUR_HOSTNAME/erddap/status.html
+```
+
+| Address | Expected result |
+|---|---|
+| `/` | Redirect to GitHub Pages; the browser address changes. |
+| `/healthz` | Display `ok` from Apache. |
+| `/erddap/status.html` | Display the ERDDAP status page. |
+
+For a command-line test without changing the hosts file, use `curl --resolve`:
+
+```{.bash}
+curl -I \
+  --resolve YOUR_HOSTNAME:443:YOUR_PUBLIC_LOAD_BALANCER_IP \
+  https://YOUR_HOSTNAME/erddap/status.html
+```
+
+If a staging certificate is not yet valid or trusted, adding `-k` temporarily lets you test routing while skipping certificate verification. Production HTTPS checks must succeed without `-k`.
+
+### 6. Check Requests and Finish
+
+On the VM, follow the Apache access log:
+
+```{.bash}
+sudo tail -f /var/log/apache2/website-redirect-access.log
+```
+
+You should see periodic `/healthz` requests and the initial website request returning 302. Later website clicks happen on GitHub and do not appear here. ERDDAP requests bypass Apache.
+
+| Problem | First check |
+|---|---|
+| Apache backend is unhealthy | Apache is running on port 80, `/healthz` returns 200, and both GCP and local firewalls allow the required sources. |
+| Website or ERDDAP reaches the wrong destination | The hostname's default backend and both ERDDAP path rules. |
+| Certificate error | The HTTPS frontend's certificate matches the hostname and is trusted by the client. |
+
+Once DNS points to the new load balancer, remove the temporary hosts entry and repeat the browser tests. Confirm production DNS and HTTPS both work.
+
+Keep 302 while the GitHub destination may change. Once it is settled, optionally change `[R=302,L]` to `[R=301,L]`, run `sudo apache2ctl configtest`, and reload Apache. A 301 can be cached by browsers.
+
+Include the Apache site configuration in the team's configuration backup, and verify Apache starts after reboot. Continue to [Go-Live Checklist and Recovery Basics](gcp-migration-recovery.qmd).
+
+#### Official references
+
+- [Ubuntu Apache installation](https://ubuntu.com/server/docs/how-to/web-services/install-apache2/)
+- [Apache rewrite rules](https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html)
+- [Google Cloud backend services](https://docs.cloud.google.com/load-balancing/docs/backend-service)
+- [Load-balancer firewall rules](https://docs.cloud.google.com/load-balancing/docs/firewall-rules)
+- [URL-map routing](https://docs.cloud.google.com/load-balancing/docs/url-map)

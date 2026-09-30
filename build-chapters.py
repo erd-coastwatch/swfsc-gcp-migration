@@ -15,6 +15,7 @@ top_chapters = [
             "gcp-infrastructure.qmd",
             "gcp-vm-access.qmd",
             "gcp-erddap-vm.qmd",
+            "gcp-website-redirect.qmd",
             "gcp-migration-recovery.qmd",
         ],
     },

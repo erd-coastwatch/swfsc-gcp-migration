@@ -466,6 +466,8 @@ Repeat the backend-health and public-HTTPS checks. The infrastructure setup is c
 
 The ERDDAP administrator can then manage the production `datasets.xml` using the [official datasets.xml documentation](https://erddap.github.io/docs/server-admin/datasets) and the team's dataset-specific procedures. Production catalog authoring and dataset migration are intentionally outside this infrastructure guide.
 
+To also use the ERDDAP hostname as an entry point to a GitHub Pages website, continue to [Optional Website Redirect with Apache](gcp-website-redirect.qmd). This integration is optional and follows the validated ERDDAP setup above.
+
 ### Operational Reference: rclone Cache Refresh
 
 This subsection applies only to bucket-backed deployments after setup is complete.
